@@ -1,0 +1,11 @@
+id,job_role,question,ideal_answer,core_keywords,supporting_keywords,difficulty
+1,Software Engineer,What is Object-Oriented Programming?,Object-oriented programming is a programming paradigm based on objects that contain data and behavior.,object;class,inheritance;encapsulation;polymorphism;abstraction,Easy
+2,Software Engineer,What is a REST API?,REST is an architectural style that uses HTTP methods to enable stateless communication between a client and server.,rest;http;stateless,get;post;put;delete;client;server,Easy
+3,Software Engineer,What is polymorphism?,Polymorphism allows objects to take multiple forms and enables the same interface to behave differently.,polymorphism,inheritance;method overriding;oop,Medium
+4,Software Engineer,What is encapsulation?,Encapsulation is the concept of hiding internal data and exposing only necessary functionality.,encapsulation,data hiding;access modifiers;oop,Easy
+5,Software Engineer,What is inheritance?,Inheritance allows a class to acquire properties and methods of another class.,inheritance,base class;derived class;oop,Easy
+6,Software Engineer,What is abstraction?,Abstraction focuses on exposing essential features while hiding implementation details.,abstraction,interfaces;abstract classes;oop,Medium
+7,Software Engineer,What is a database index?,A database index improves query performance by allowing faster data retrieval.,index,database;query optimization;performance,Medium
+8,Software Engineer,What is version control?,Version control is a system that tracks changes to source code over time.,version control,git;repository;commit;branch,Easy
+9,Software Engineer,What is multithreading?,Multithreading allows a program to execute multiple threads concurrently.,multithreading,concurrency;parallelism;threads,Hard
+10,Software Engineer,What is a deadlock?,A deadlock occurs when multiple processes are unable to proceed because each is waiting for resources held by others.,deadlock,concurrency;resource management;threads,Hard
