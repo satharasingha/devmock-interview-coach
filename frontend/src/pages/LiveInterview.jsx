@@ -2,8 +2,7 @@ import { useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import useInterviewQuestions from "../hooks/useInterviewQuestions";
-import { evaluateAnswer } from "../services/evaluationService";
+import useInterviewQuestions from "../hooks/useInterviewQuestions.js";
 
 export default function LiveInterview() {
   const { role } = useParams();
