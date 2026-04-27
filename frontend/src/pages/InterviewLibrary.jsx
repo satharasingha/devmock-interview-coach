@@ -4,12 +4,11 @@ import Footer from "../components/Footer";
 import { useState } from "react";
 
 const roles = [
-  // Intern & Entry Level Positions
   {
     title: "Intern Software Engineer",
     description:
       "Perfect for students: Practice core programming concepts, basic algorithms, and get interview-ready for tech internships.",
-    path: "/setup/intern-software-engineer",
+    path: "/interview/Software%20Engineer",  // Fixed: Now goes directly to LiveInterview
     icon: "🌱",
     color: "from-green-400 to-emerald-400",
     level: "Intern",
@@ -20,7 +19,7 @@ const roles = [
     title: "Intern Full Stack Developer",
     description:
       "Learn the fundamentals of both frontend and backend development. Perfect for aspiring full stack interns.",
-    path: "/setup/intern-full-stack",
+    path: "/interview/Full%20Stack%20Developer",  // Fixed
     icon: "🔄",
     color: "from-teal-400 to-cyan-400",
     level: "Intern",
@@ -31,7 +30,7 @@ const roles = [
     title: "Intern Frontend Developer",
     description:
       "Master HTML, CSS, JavaScript basics and React fundamentals for frontend internship interviews.",
-    path: "/setup/intern-frontend",
+    path: "/interview/Frontend%20Developer",  // Fixed
     icon: "🎨",
     color: "from-sky-400 to-blue-400",
     level: "Intern",
@@ -42,7 +41,7 @@ const roles = [
     title: "Intern Backend Developer",
     description:
       "Focus on API basics, database fundamentals, and server-side logic for backend internship roles.",
-    path: "/setup/intern-backend",
+    path: "/interview/Backend%20Developer",  // Fixed
     icon: "⚙️",
     color: "from-indigo-400 to-blue-400",
     level: "Intern",
@@ -53,20 +52,18 @@ const roles = [
     title: "Intern Data Analyst",
     description:
       "Practice SQL queries, data visualization, and basic statistics for data internship positions.",
-    path: "/setup/intern-data-analyst",
+    path: "/interview/Data%20Analyst",  // Fixed
     icon: "📊",
     color: "from-purple-400 to-violet-400",
     level: "Intern",
     questions: "25+ questions",
     type: "intern",
   },
-
-  // Junior to Mid-level Positions
   {
     title: "Software Engineer",
     description:
       "Practice technical questions for system design, algorithms, and high-performance coding.",
-    path: "/setup/software-engineer",
+    path: "/interview/Software%20Engineer",  // Fixed
     icon: "💻",
     color: "from-blue-500 to-indigo-500",
     level: "Junior - Mid",
@@ -77,7 +74,7 @@ const roles = [
     title: "Full Stack Developer",
     description:
       "Master both frontend and backend development with modern frameworks and best practices.",
-    path: "/setup/full-stack-developer",
+    path: "/interview/Full%20Stack%20Developer",  // Fixed
     icon: "🔄",
     color: "from-cyan-500 to-blue-500",
     level: "Junior - Mid",
@@ -88,110 +85,11 @@ const roles = [
     title: "Data Engineer",
     description:
       "Master ETL pipelines, Big Data concepts, SQL optimization, and data architecture.",
-    path: "/setup/data-engineer",
+    path: "/interview/Data%20Engineer",  // Fixed
     icon: "📊",
     color: "from-emerald-500 to-teal-500",
     level: "Mid - Senior",
     questions: "40+ questions",
-    type: "full-time",
-  },
-  {
-    title: "Frontend Developer",
-    description:
-      "Focus on React patterns, CSS mastery, JavaScript fundamentals, and modern UI.",
-    path: "/setup/frontend-developer",
-    icon: "🎨",
-    color: "from-sky-500 to-blue-500",
-    level: "Junior - Mid",
-    questions: "60+ questions",
-    type: "full-time",
-  },
-  {
-    title: "Backend Developer",
-    description:
-      "Build robust APIs, handle server-side logic, concurrency, and database management.",
-    path: "/setup/backend-developer",
-    icon: "⚙️",
-    color: "from-indigo-500 to-blue-500",
-    level: "Mid - Senior",
-    questions: "45+ questions",
-    type: "full-time",
-  },
-  {
-    title: "Data Scientist",
-    description:
-      "Dive deep into statistics, machine learning models, Python, and predictive analytics.",
-    path: "/setup/data-scientist",
-    icon: "🧠",
-    color: "from-violet-500 to-purple-500",
-    level: "Senior",
-    questions: "35+ questions",
-    type: "full-time",
-  },
-  {
-    title: "Product Manager",
-    description:
-      "Refine strategy, roadmap planning, product lifecycle, and business metrics.",
-    path: "/setup/product-manager",
-    icon: "📱",
-    color: "from-amber-500 to-orange-400",
-    level: "Mid - Senior",
-    questions: "25+ questions",
-    type: "full-time",
-  },
-  {
-    title: "DevOps Engineer",
-    description:
-      "Master CI/CD pipelines, cloud infrastructure, and containerization.",
-    path: "/setup/devops-engineer",
-    icon: "🚀",
-    color: "from-slate-500 to-gray-500",
-    level: "Mid - Senior",
-    questions: "40+ questions",
-    type: "full-time",
-  },
-  {
-    title: "Mobile Developer",
-    description:
-      "Practice native iOS/Android or cross-platform Flutter/React Native development.",
-    path: "/setup/mobile-developer",
-    icon: "📱",
-    color: "from-green-500 to-emerald-500",
-    level: "Junior - Mid",
-    questions: "55+ questions",
-    type: "full-time",
-  },
-  {
-    title: "Cybersecurity Analyst",
-    description:
-      "Focus on network defense, encryption, threat modeling, and incident response.",
-    path: "/setup/cybersecurity-analyst",
-    icon: "🔒",
-    color: "from-rose-500 to-red-400",
-    level: "Mid - Senior",
-    questions: "35+ questions",
-    type: "full-time",
-  },
-  {
-    title: "Machine Learning Engineer",
-    description:
-      "Master ML pipelines, model deployment, and deep learning frameworks.",
-    path: "/setup/ml-engineer",
-    icon: "🤖",
-    color: "from-fuchsia-500 to-purple-500",
-    level: "Senior",
-    questions: "45+ questions",
-    type: "full-time",
-  },
-  {
-    title: "Cloud Architect",
-    description:
-      "Design scalable cloud solutions, microservices, and distributed systems.",
-    path: "/setup/cloud-architect",
-    icon: "☁️",
-    color: "from-sky-500 to-indigo-500",
-    level: "Senior",
-    questions: "30+ questions",
     type: "full-time",
   },
 ];
@@ -258,7 +156,7 @@ export default function InterviewLibrary() {
           <div className="flex flex-wrap justify-center gap-4 sm:gap-8 mt-8 sm:mt-10">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-              <span className="text-xs sm:text-sm text-slate-500">18 Career Paths</span>
+              <span className="text-xs sm:text-sm text-slate-500">8 Career Paths</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
@@ -332,7 +230,8 @@ export default function InterviewLibrary() {
             {filteredRoles.map((role, index) => (
               <div
                 key={index}
-                className="group relative bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden"
+                className="group relative bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden cursor-pointer"
+                onClick={() => role.path && navigate(role.path)}
               >
                 {/* Top gradient bar */}
                 <div className={`h-1.5 bg-gradient-to-r ${role.color}`}></div>
@@ -381,7 +280,10 @@ export default function InterviewLibrary() {
                   </div>
 
                   <button
-                    onClick={() => role.path && navigate(role.path)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      role.path && navigate(role.path);
+                    }}
                     className="w-full inline-flex items-center justify-center gap-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-cyan-500 hover:to-blue-500 rounded-xl px-4 py-2.5 transition-all duration-300 shadow-sm hover:shadow-md"
                   >
                     Start Interview

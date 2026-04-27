@@ -1,6 +1,6 @@
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import InterviewTest from "./InterviewEngine"; // or InterviewEngine
+import InterviewTest from "./InterviewEngine"; 
 
 export default function SoftwareEngineerInterview() {
   return (
@@ -18,7 +18,6 @@ export default function SoftwareEngineerInterview() {
           similarity.
         </p>
 
-        {/* ✅ REAL INTERVIEW LOGIC */}
         <InterviewEngine />
       </main>
 

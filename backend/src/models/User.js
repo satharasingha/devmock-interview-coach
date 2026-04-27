@@ -31,10 +31,7 @@ const userSchema = new mongoose.Schema({
     required: true,
     default: false,
   },
-  image: {
-    type: String,
-    default: "/images/default-profile.png",
-  },
+ 
 });
 
 const User = mongoose.model("User", userSchema);

@@ -1,5 +1,8 @@
-import User from "../models/User.js";
+import User from "../models/user.js";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+dotenv.config();
 
 export async function createUser(req, res) {
   try {
@@ -7,7 +10,8 @@ export async function createUser(req, res) {
 
     const newUser = new User({
       email: req.body.email,
-      fullName: req.body.fullName,
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
       password: passwordHash,
     });
 
@@ -33,7 +37,7 @@ export async function loginUser(req, res) {
     console.log(user);
 
     if (user == null) {
-      res.json({
+      res.status(404).json({
         message: "User not found",
       });
     } else {
@@ -43,18 +47,44 @@ export async function loginUser(req, res) {
       );
 
       if (isPasswordCorrect) {
+        const payload = {
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          isAdmin: user.isAdmin,
+          isBlocked: user.isBlocked,
+          isEmailVerified: user.isEmailVerified,
+          image: user.image,
+        };
+
+        const token = jwt.sign(payload, process.env.JWT_SECRET, {
+          expiresIn: "48h",
+        });
+
         res.json({
-          message: "Login Successful",
+          token: token,
+          isAdmin: user.isAdmin,
         });
       } else {
-        res.json({
+        res.status(401).json({
           message: "Invalid Password",
         });
       }
     }
   } catch (error) {
-    res.json({
+    res.status(500).json({
       message: "Error logging in",
     });
+  }
+}
+
+export function isAdmin(req) {
+  if (req.user == null) {
+    return false;
+  }
+  if (req.user.isAdmin) {
+    return true;
+  } else {
+    return false;
   }
 }

@@ -5,6 +5,7 @@ import MITLogo from "../assets/mit-logo.png";
 import BerkeleyLogo from "../assets/berkeley-logo.jpg";
 import CambridgeLogo from "../assets/cambridge-logo.png";
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function Home() {
   const codeRef = useRef(null);
@@ -36,12 +37,16 @@ export default function Home() {
       let charIndex = 0;
       let currentLine = '';
       
+      // Get all line elements
+      const lineElements = Array.from(codeRef.current.children);
+      
       const typeLine = () => {
         if (lineIndex < codeLines.length) {
           if (charIndex < codeLines[lineIndex].length) {
             currentLine += codeLines[lineIndex][charIndex];
-            if (codeRef.current.children[lineIndex]) {
-              codeRef.current.children[lineIndex].textContent = currentLine;
+            // Safely update the element if it exists
+            if (lineElements[lineIndex]) {
+              lineElements[lineIndex].textContent = currentLine;
             }
             charIndex++;
             setTimeout(typeLine, 20);
@@ -49,8 +54,8 @@ export default function Home() {
             lineIndex++;
             charIndex = 0;
             currentLine = '';
-            if (lineIndex < codeLines.length && codeRef.current.children[lineIndex]) {
-              codeRef.current.children[lineIndex].style.opacity = '1';
+            if (lineIndex < codeLines.length && lineElements[lineIndex]) {
+              lineElements[lineIndex].style.opacity = '1';
             }
             setTimeout(typeLine, 150);
           }
@@ -58,14 +63,15 @@ export default function Home() {
       };
       
       // Initialize all lines as empty
-      if (codeRef.current.children) {
-        Array.from(codeRef.current.children).forEach(child => {
+      lineElements.forEach(child => {
+        if (child) {
           child.textContent = '';
-        });
-      }
+        }
+      });
       
       // Start typing
-      setTimeout(typeLine, 500);
+      const timer = setTimeout(typeLine, 500);
+      return () => clearTimeout(timer);
     }
 
     return () => {
@@ -112,21 +118,32 @@ export default function Home() {
 
               {/* Subheading */}
               <p className="max-w-2xl mx-auto text-gray-300 text-base sm:text-lg md:text-xl lg:text-2xl mb-8 sm:mb-10 leading-relaxed px-4">
-                The intelligent way for students and graduates to master technical interviews. Get personalized guidance, real-time feedback, and track your progress with academic precision.
+                The intelligent way for students and graduates to master technical interviews. Get personalized guidance, real time feedback, and track your progress with academic precision.
               </p>
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-10 sm:mb-12 w-full sm:w-auto px-4">
-                <button className="group relative px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-blue-500/25 transform hover:-translate-y-1 transition-all duration-300 w-full sm:w-auto">
+                <Link 
+                  to="/interview/software-engineer"
+                  className="group relative px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-blue-500/25 transform hover:-translate-y-1 transition-all duration-300 w-full sm:w-auto text-center"
+                >
                   <span className="relative z-10 flex items-center justify-center gap-2">
                     Start Learning Free
                     <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                     </svg>
                   </span>
-                </button>
+                </Link>
                 
-                <button className="group px-6 sm:px-8 py-3 sm:py-4 bg-gray-800 border border-gray-700 hover:border-blue-500 rounded-xl flex items-center justify-center gap-2 sm:gap-3 text-gray-300 hover:text-white transition-all duration-300 w-full sm:w-auto">
+                <button 
+                  onClick={() => {
+                    const featuresSection = document.getElementById('features');
+                    if (featuresSection) {
+                      featuresSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  className="group px-6 sm:px-8 py-3 sm:py-4 bg-gray-800 border border-gray-700 hover:border-blue-500 rounded-xl flex items-center justify-center gap-2 sm:gap-3 text-gray-300 hover:text-white transition-all duration-300 w-full sm:w-auto"
+                >
                   <span className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 bg-blue-500/10 rounded-full group-hover:bg-blue-500/20">
                     ▶
                   </span>
@@ -225,6 +242,9 @@ export default function Home() {
                           src={university.logo} 
                           alt={university.name} 
                           className="max-h-5 sm:max-h-6 md:max-h-8 max-w-5 sm:max-w-6 md:max-w-8 object-contain brightness-0 invert opacity-80 hover:opacity-100 transition-opacity"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
                         />
                       </div>
                       <span className="font-medium text-gray-300 text-xs sm:text-sm">
@@ -239,7 +259,7 @@ export default function Home() {
         </section>
 
         {/* FEATURES SECTION - Dark Theme Cards */}
-        <section className="pb-20 md:pb-24 lg:pb-32">
+        <section id="features" className="pb-20 md:pb-24 lg:pb-32">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             {/* Section header */}
             <div className="text-center mb-10 md:mb-12 lg:mb-16">
@@ -278,7 +298,7 @@ export default function Home() {
                   Smart Feedback
                 </h3>
                 <p className="text-gray-400 text-sm sm:text-base leading-relaxed">
-                  Receive detailed, academic-grade analysis on your code quality, approach, and optimization strategies.
+                  Receive detailed, academic grade analysis on your code quality, approach, and optimization strategies.
                 </p>
               </div>
 
@@ -324,24 +344,6 @@ export default function Home() {
       </main>
 
       <Footer />
-
-      {/* Animation styles */}
-      <style jsx>{`
-        @keyframes blob {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
-        }
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-      `}</style>
     </>
   );
 }

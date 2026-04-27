@@ -17,8 +17,7 @@ def evaluate():
 
     final_score = round(
         (0.5 * keyword_result["keyword_score"] +
-         0.5 * semantic_result) * 10,
-        2
+         0.5 * semantic_result) * 10,2
     )
 
     return jsonify({
