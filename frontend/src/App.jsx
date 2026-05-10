@@ -12,6 +12,7 @@ import AdminManageJobRoles from "./pages/admin/AdminManageRoles";
 import AboutUs from "./pages/AboutUs";
 import ContactUs from "./pages/Contact";
 import ResetPassword from "./pages/ResetPassword";
+import AdminUserManagement from "./pages/admin/AdminUserManagement";
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/add-question" element={<AdminAddQuestion />} />
         <Route path="/admin/interviews" element={<AdminManageJobRoles />} />
+        <Route path="/admin/users" element={<AdminUserManagement />} />
         
         {/* 404 Catch-all route - optional */}
         <Route path="*" element={<NotFound />} />

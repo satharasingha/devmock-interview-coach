@@ -38,7 +38,7 @@ const createTransporter = () => {
   });
 };
 
-// Register User
+// Register User - FIXED: Always set isAdmin to false for new users
 export const registerUser = async (req, res) => {
   try {
     const { fullName, email, password } = req.body;
@@ -60,14 +60,19 @@ export const registerUser = async (req, res) => {
       });
     }
 
+    // IMPORTANT: Force isAdmin to false for ALL new registrations
     const user = new User({
       fullName,
       email: email.toLowerCase(),
       password,
+      isAdmin: false,        // ← FORCE FALSE - NO NEW ADMINS
+      isBlocked: false,
+      isEmailVerified: false,
     });
 
     await user.save();
     console.log("User created successfully:", user._id);
+    console.log("User isAdmin status:", user.isAdmin); // Should log false
 
     const token = generateToken(user);
 
@@ -79,7 +84,7 @@ export const registerUser = async (req, res) => {
         id: user._id,
         fullName: user.fullName,
         email: user.email,
-        isAdmin: user.isAdmin,
+        isAdmin: user.isAdmin, // This will be false
       },
     });
   } catch (error) {
@@ -308,5 +313,105 @@ export const getCurrentUser = async (req, res) => {
       success: false,
       message: "Server error" 
     });
+  }
+};
+
+// Get all users (Admin only)
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({}).select("-password").sort({ createdAt: -1 });
+    res.json({ 
+      success: true, 
+      users,
+      total: users.length 
+    });
+  } catch (error) {
+    console.error("Get all users error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// Delete user (Admin only)
+export const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findByIdAndDelete(id);
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    
+    res.json({ success: true, message: "User deleted successfully" });
+  } catch (error) {
+    console.error("Delete user error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// Toggle user block status (Admin only)
+export const toggleBlockUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isBlocked } = req.body;
+    
+    const user = await User.findByIdAndUpdate(
+      id,
+      { isBlocked },
+      { new: true }
+    ).select("-password");
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    
+    res.json({ 
+      success: true, 
+      message: `User ${isBlocked ? "blocked" : "unblocked"} successfully`,
+      user 
+    });
+  } catch (error) {
+    console.error("Toggle block error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// Toggle admin status (Admin only) - With protection to prevent removing last admin
+export const toggleAdminUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isAdmin } = req.body;
+    
+    // Count existing admins
+    const adminCount = await User.countDocuments({ isAdmin: true });
+    
+    // Check if this is the last admin being demoted
+    if (adminCount === 1 && isAdmin === false) {
+      const userToUpdate = await User.findById(id);
+      if (userToUpdate && userToUpdate.isAdmin) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Cannot remove the only admin. At least one admin must exist." 
+        });
+      }
+    }
+    
+    const user = await User.findByIdAndUpdate(
+      id,
+      { isAdmin },
+      { new: true }
+    ).select("-password");
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    
+    res.json({ 
+      success: true, 
+      message: `Admin status updated successfully`,
+      user 
+    });
+  } catch (error) {
+    console.error("Toggle admin error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };

@@ -5,9 +5,13 @@ import {
   getCurrentUser,
   forgotPassword,
   verifyResetToken,
-  resetPassword
+  resetPassword,
+  getAllUsers,
+  deleteUser,
+  toggleBlockUser,
+  toggleAdminUser
 } from "../controllers/userController.js";
-import { protect } from "../middleware/authMiddleware.js";
+import { protect, adminOnly } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -20,5 +24,11 @@ router.post("/reset-password/:token", resetPassword);
 
 // Private routes
 router.get("/me", protect, getCurrentUser);
+
+// Admin only routes
+router.get("/users", protect, adminOnly, getAllUsers);
+router.delete("/users/:id", protect, adminOnly, deleteUser);
+router.put("/users/:id/block", protect, adminOnly, toggleBlockUser);
+router.put("/users/:id/admin", protect, adminOnly, toggleAdminUser);
 
 export default router;
