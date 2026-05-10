@@ -1,6 +1,5 @@
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
 
 const generateToken = (user) => {
   return jwt.sign(
@@ -34,11 +33,11 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    // Create new user
+    // Create new user (password will be hashed by pre-save middleware)
     const user = new User({
       fullName,
       email: email.toLowerCase(),
-      password,
+      password: password, // Plain password, model will hash it
     });
 
     await user.save();
@@ -98,8 +97,8 @@ export const loginUser = async (req, res) => {
       });
     }
 
-    // Check password
-    const isPasswordValid = await user.comparePassword(password);
+    // Check password using promise-based method
+    const isPasswordValid = await user.comparePasswordAsync(password);
     if (!isPasswordValid) {
       return res.status(401).json({ 
         success: false,
