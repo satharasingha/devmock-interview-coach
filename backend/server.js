@@ -1,6 +1,9 @@
+import dotenv from 'dotenv';
+// Load environment variables FIRST - before any other imports
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import evaluationRoutes from './src/routes/evaluationRoutes.js';
 import questionRoutes from './src/routes/questionsRouter.js';
@@ -8,8 +11,12 @@ import { errorHandler } from './src/middleware/errorHandler.js';
 import authRoutes from './src/routes/authRouter.js'
 import contactRoutes from './src/routes/contactRoutes.js';
 
-// Load environment variables
-dotenv.config();
+// Debug: Check if email credentials are loaded
+console.log('=== ENVIRONMENT VARIABLES CHECK ===');
+console.log('EMAIL_USER:', process.env.EMAIL_USER ? '✅ Loaded' : '❌ Missing');
+console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? '✅ Loaded' : '❌ Missing');
+console.log('Gemini API Key:', process.env.GEMINI_API_KEY ? '✅ Loaded' : '❌ Missing');
+console.log('===================================');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -20,10 +27,6 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
-
-// Log API key status (remove in production)
-console.log('Gemini API Key loaded:', process.env.GEMINI_API_KEY ? 'Yes' : 'No');
-console.log('API Key length:', process.env.GEMINI_API_KEY?.length || 0);
 
 // MongoDB Connection
 const mongodbURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/devmock_database';
@@ -49,5 +52,4 @@ app.use(errorHandler);
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`Questions API: http://localhost:${PORT}/api/questions`);
 });

@@ -11,6 +11,7 @@ import AdminAddQuestion from "./pages/admin/AdminAddQuestion";
 import AdminManageJobRoles from "./pages/admin/AdminManageRoles";
 import AboutUs from "./pages/AboutUs";
 import ContactUs from "./pages/Contact";
+import ResetPassword from "./pages/ResetPassword";
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/about" element={<AboutUs />} />
         <Route path="/contact" element={<ContactUs />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
         
         {/* Interview Routes */}
         <Route path="/setup/:role" element={<InterviewSetup />} />
