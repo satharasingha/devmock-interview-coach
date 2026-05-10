@@ -22,7 +22,7 @@ const correctTranscript = async (text, context) => {
   } catch (error) {
     console.error("Correction API error:", error);
   }
-  return text; // Return original if correction fails
+  return text;
 };
 
 // Quick local correction (as fallback)
@@ -87,6 +87,12 @@ export default function LiveInterview() {
   const [permissionDenied, setPermissionDenied] = useState(false);
   const [isCorrecting, setIsCorrecting] = useState(false);
   const [pendingCorrection, setPendingCorrection] = useState(null);
+  
+  // NEW: Store all answers for the session
+  const [allAnswers, setAllAnswers] = useState([]);
+  const [allStrengths, setAllStrengths] = useState([]);
+  const [allImprovements, setAllImprovements] = useState([]);
+  const [sessionCompleted, setSessionCompleted] = useState(false);
 
   const {
     eyeContact,
@@ -127,6 +133,46 @@ export default function LiveInterview() {
       if (matches) count += matches.length;
     });
     return count;
+  };
+
+  // NEW: Save interview to database
+  const saveInterviewToHistory = async (finalScore, answers, duration, passed, strengths, improvements) => {
+    try {
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      const token = userInfo?.token;
+      
+      if (!token) {
+        console.log("No token found, skipping save");
+        return;
+      }
+      
+      const response = await fetch("http://localhost:3000/api/auth/interview/save", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          role: role?.replace(/%20/g, " "),
+          score: finalScore,
+          duration: duration,
+          passed: passed,
+          answers: answers,
+          feedback: {
+            strengths: [...new Set(strengths)].slice(0, 3),
+            improvements: [...new Set(improvements)].slice(0, 3),
+          },
+        }),
+      });
+      
+      if (response.ok) {
+        console.log("✅ Interview saved to history");
+      } else {
+        console.error("Failed to save interview:", await response.text());
+      }
+    } catch (error) {
+      console.error("Error saving interview:", error);
+    }
   };
 
   // Start Camera
@@ -212,7 +258,7 @@ export default function LiveInterview() {
     setSessionStats((prev) => ({ ...prev, wordsSpoken: words, fillerWords: fillerCount }));
   }, [transcript]);
 
-  // ENHANCED: Speech Recognition with Groq Correction
+  // Speech Recognition with Groq Correction
   const startListening = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -251,31 +297,24 @@ export default function LiveInterview() {
         }
       }
 
-      // Show interim results immediately
       if (interimSegment) {
         setInterimTranscript(` [${interimSegment}]`);
       } else {
         setInterimTranscript("");
       }
 
-      // Process final segment with correction
       if (finalSegment) {
-        // Clear any pending correction timeout
         if (correctionTimeoutRef.current) {
           clearTimeout(correctionTimeoutRef.current);
         }
 
-        // Show what was heard before correction
         setPendingCorrection(finalSegment.trim());
         setIsCorrecting(true);
 
-        // Send to Groq for correction
         correctionTimeoutRef.current = setTimeout(async () => {
           try {
             const context = `Question: ${question?.question || "technical interview"} - Role: ${role}`;
             let corrected = await correctTranscript(finalSegment, context);
-            
-            // Apply quick local correction as additional safety
             corrected = quickLocalCorrect(corrected);
             
             setTranscript((prev) => {
@@ -286,13 +325,12 @@ export default function LiveInterview() {
             setIsCorrecting(false);
             setPendingCorrection(null);
           } catch (error) {
-            // Fallback to local correction if Groq fails
             const localCorrected = quickLocalCorrect(finalSegment);
             setTranscript((prev) => prev + localCorrected + " ");
             setIsCorrecting(false);
             setPendingCorrection(null);
           }
-        }, 800); // Wait 800ms for speech pause
+        }, 800);
       }
     };
 
@@ -321,15 +359,35 @@ export default function LiveInterview() {
     }
   };
 
-  const endSession = () => {
+  // NEW: End Session and Save to History
+  const endSession = async () => {
     stopCamera();
     if (recognitionRef.current) recognitionRef.current.stop();
     setListening(false);
+    
+    // Save interview to history if there are answers
+    if (allAnswers.length > 0 && !sessionCompleted) {
+      const totalScore = allAnswers.reduce((sum, ans) => sum + ans.score, 0);
+      const avgScore = Math.round(totalScore / allAnswers.length);
+      const passed = avgScore >= 60;
+      
+      await saveInterviewToHistory(
+        avgScore,
+        allAnswers,
+        sessionStats.duration,
+        passed,
+        allStrengths,
+        allImprovements
+      );
+      setSessionCompleted(true);
+    }
+    
     setIsSessionActive(false);
     setCameraEnabled(false);
     setTimeout(() => navigate("/interviewlibrary"), 1500);
   };
 
+  // NEW: Submit Answer and Store in History
   const submitAnswer = async () => {
     if (!question || !transcript.trim()) return;
 
@@ -346,11 +404,29 @@ export default function LiveInterview() {
 
       const result = await evaluateAnswerAPI(cleanTranscript, question.ideal_answer, keywords);
 
+      const finalScore = result.final_score * 10;
       const relevanceScore = result.semantic_similarity || 85;
       const fluencyScore = Math.max(0, Math.min(100, 100 - sessionStats.fillerWords * 2));
       const structureScore = result.final_score * 10;
-      const finalScore = result.final_score * 10;
       const questionTimestamp = Math.max(0, sessionStats.duration - 45);
+      
+      // NEW: Store answer for history
+      setAllAnswers(prev => [...prev, {
+        question: question.question,
+        userAnswer: cleanTranscript,
+        score: finalScore,
+        matchedKeywords: result.matched_keywords || [],
+        missingKeywords: result.missing_keywords || [],
+        timestamp: formatTime(questionTimestamp),
+      }]);
+      
+      // NEW: Collect strengths and improvements
+      if (result.strengths) {
+        setAllStrengths(prev => [...prev, ...result.strengths]);
+      }
+      if (result.improvements) {
+        setAllImprovements(prev => [...prev, ...result.improvements]);
+      }
 
       navigate("/feedback", {
         state: {
@@ -375,7 +451,7 @@ export default function LiveInterview() {
     }
   };
 
-  // Loading States (keep your existing loading, error, and no questions states)
+  // Loading States
   if (questionsLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#f8faff] to-white flex flex-col">
@@ -429,7 +505,7 @@ export default function LiveInterview() {
     );
   }
 
-  // Main UI - Keep your existing JSX but update the Answer Section
+  // Main UI
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#f8faff] to-white flex flex-col">
       <Navbar />
@@ -465,9 +541,8 @@ export default function LiveInterview() {
       {/* Main Content */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 lg:py-10 mt-24">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Camera (keep your existing camera section) */}
+          {/* Left Column - Camera */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Camera Section - Keep your existing camera JSX */}
             <div className="bg-slate-900 rounded-2xl overflow-hidden relative group aspect-video">
               <video ref={videoRef} autoPlay muted playsInline className="absolute inset-0 w-full h-full object-cover" />
               <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" width={640} height={480} />
@@ -553,7 +628,7 @@ export default function LiveInterview() {
               </div>
             )}
 
-            {/* Answer Section - WITH GROQ CORRECTION FEEDBACK */}
+            {/* Answer Section */}
             <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-lg border">
               <div className="flex justify-between items-center mb-3">
                 <div className="flex items-center gap-2">
@@ -611,7 +686,6 @@ export default function LiveInterview() {
                 </button>
               </div>
 
-              {/* Accuracy Tip */}
               <div className="mt-3 p-2 bg-blue-50 rounded-lg text-xs text-blue-600 text-center">
                 💡 Speaking clearly improves accuracy. AI automatically corrects technical terms like "froent" → "frontend"
               </div>
