@@ -19,7 +19,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET distinct job roles - ADD THIS ENDPOINT
+// GET distinct job roles
 router.get('/distinct-roles', async (req, res) => {
   try {
     const roles = await Question.distinct('job_role');
@@ -29,7 +29,22 @@ router.get('/distinct-roles', async (req, res) => {
   }
 });
 
-// GET single question by ID
+// GET question count for a specific role - MOVED HERE (BEFORE /:id)
+router.get('/count', async (req, res) => {
+  try {
+    const { role } = req.query;
+    const query = {};
+    
+    if (role) query.job_role = role;
+    
+    const count = await Question.countDocuments(query);
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// GET single question by ID - MUST BE LAST
 router.get('/:id', async (req, res) => {
   try {
     const question = await Question.findOne({ id: parseInt(req.params.id) });
@@ -127,21 +142,6 @@ router.delete('/role/:jobRole', async (req, res) => {
       message: `Deleted ${result.deletedCount} questions for ${decodedRole}`,
       deletedCount: result.deletedCount 
     });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// GET question count for a specific role
-router.get('/count', async (req, res) => {
-  try {
-    const { role } = req.query;
-    const query = {};
-    
-    if (role) query.job_role = role;
-    
-    const count = await Question.countDocuments(query);
-    res.json({ count });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
