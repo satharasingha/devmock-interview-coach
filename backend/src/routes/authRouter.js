@@ -16,7 +16,6 @@ import {
   getInterviewHistory,
   getInterviewDetails,
   deleteInterview,
-  getInterviewStats,
 } from "../controllers/userController.js";
 import { protect, adminOnly } from "../middleware/authMiddleware.js";
 

@@ -22,7 +22,7 @@ const interviewSchema = new mongoose.Schema({
     required: true,
   },
   duration: {
-    type: Number, // in seconds
+    type: Number,
     default: 0,
   },
   passed: {
@@ -31,19 +31,9 @@ const interviewSchema = new mongoose.Schema({
   },
   answers: [
     {
-      question: {
-        type: String,
-        required: true,
-      },
-      userAnswer: {
-        type: String,
-        required: true,
-      },
-      score: {
-        type: Number,
-        min: 0,
-        max: 100,
-      },
+      question: String,
+      userAnswer: String,
+      score: Number,
       matchedKeywords: [String],
       missingKeywords: [String],
       timestamp: String,
@@ -59,7 +49,6 @@ const interviewSchema = new mongoose.Schema({
   },
 });
 
-// Index for faster queries
 interviewSchema.index({ userId: 1, createdAt: -1 });
 
 const Interview = mongoose.model('Interview', interviewSchema);
