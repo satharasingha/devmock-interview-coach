@@ -415,3 +415,125 @@ export const toggleAdminUser = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+
+// Get User Profile
+export const getUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "User not found" 
+      });
+    }
+    res.json({
+      success: true,
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        isAdmin: user.isAdmin,
+        createdAt: user.createdAt,
+        lastLogin: user.lastLogin,
+        interviewHistory: user.interviewHistory || [],
+      }
+    });
+  } catch (error) {
+    console.error("Get profile error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// Update User Profile (Only name and email)
+export const updateUserProfile = async (req, res) => {
+  try {
+    const { fullName, email } = req.body;
+    
+    // Check if email already exists for another user
+    if (email && email !== req.user.email) {
+      const existingUser = await User.findOne({ email: email.toLowerCase() });
+      if (existingUser) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Email already in use by another account" 
+        });
+      }
+    }
+    
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    
+    // Update fields
+    if (fullName) user.fullName = fullName;
+    if (email) user.email = email.toLowerCase();
+    
+    await user.save();
+    
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        isAdmin: user.isAdmin,
+      }
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// Save Interview Result
+export const saveInterviewResult = async (req, res) => {
+  try {
+    const { role, score, feedback, questionsAnswered, duration, passed } = req.body;
+    
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    
+    user.interviewHistory.push({
+      role,
+      date: new Date(),
+      score,
+      feedback,
+      questionsAnswered,
+      duration,
+      passed,
+    });
+    
+    await user.save();
+    
+    res.json({
+      success: true,
+      message: "Interview result saved successfully",
+    });
+  } catch (error) {
+    console.error("Save interview error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// Get User Interview History
+export const getInterviewHistory = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("interviewHistory");
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    
+    res.json({
+      success: true,
+      interviewHistory: user.interviewHistory || [],
+    });
+  } catch (error) {
+    console.error("Get interview history error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};

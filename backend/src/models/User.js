@@ -45,6 +45,44 @@ const userSchema = new mongoose.Schema({
   lastLogin: {
     type: Date,
   },
+  // NEW: Interview History
+  interviewHistory: [
+    {
+      role: {
+        type: String,
+        required: true,
+      },
+      date: {
+        type: Date,
+        default: Date.now,
+      },
+      score: {
+        type: Number,
+        min: 0,
+        max: 100,
+      },
+      feedback: {
+        strengths: [String],
+        improvements: [String],
+      },
+      questionsAnswered: [
+        {
+          question: String,
+          userAnswer: String,
+          score: Number,
+          matchedKeywords: [String],
+        }
+      ],
+      duration: {
+        type: Number, // in seconds
+        default: 0,
+      },
+      passed: {
+        type: Boolean,
+        default: false,
+      },
+    },
+  ],
 });
 
 // Hash password before saving

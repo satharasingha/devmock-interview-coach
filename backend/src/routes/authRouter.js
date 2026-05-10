@@ -9,7 +9,11 @@ import {
   getAllUsers,
   deleteUser,
   toggleBlockUser,
-  toggleAdminUser
+  toggleAdminUser,
+  getUserProfile,
+  updateUserProfile,
+  saveInterviewResult,
+  getInterviewHistory,
 } from "../controllers/userController.js";
 import { protect, adminOnly } from "../middleware/authMiddleware.js";
 
@@ -22,8 +26,12 @@ router.post("/forgot-password", forgotPassword);
 router.get("/verify-reset-token/:token", verifyResetToken);
 router.post("/reset-password/:token", resetPassword);
 
-// Private routes
+// Protected routes (requires login)
 router.get("/me", protect, getCurrentUser);
+router.get("/profile", protect, getUserProfile);
+router.put("/profile", protect, updateUserProfile);
+router.post("/interview/save", protect, saveInterviewResult);
+router.get("/interview/history", protect, getInterviewHistory);
 
 // Admin only routes
 router.get("/users", protect, adminOnly, getAllUsers);

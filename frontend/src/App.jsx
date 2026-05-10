@@ -13,6 +13,7 @@ import AboutUs from "./pages/AboutUs";
 import ContactUs from "./pages/Contact";
 import ResetPassword from "./pages/ResetPassword";
 import AdminUserManagement from "./pages/admin/AdminUserManagement";
+import Profile from "./pages/UserProfile";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
         <Route path="/about" element={<AboutUs />} />
         <Route path="/contact" element={<ContactUs />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/profile" element={<Profile />} />
         
         {/* Interview Routes */}
         <Route path="/setup/:role" element={<InterviewSetup />} />
