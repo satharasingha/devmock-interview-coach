@@ -17,71 +17,168 @@ import {
   ThumbsDown,
   Lightbulb,
   FileText,
-  ChevronRight,
   Printer,
   Copy,
+  Award,
+  XCircle,
 } from "lucide-react";
 
 export default function FeedbackPage() {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Get session data from navigation state or use mock data
-  const [sessionData] = useState(location.state || {
-    date: "Oct 24, 2023",
-    duration: "45m",
-    topic: "Behavioral",
-    score: 82,
-    relevance: 90,
-    fluency: 75,
-    structure: 80,
-    fillerWords: 12,
-    strengths: [
-      "Situation Clarity: You effectively set the context, describing the engineering challenge with the legacy API integration clearly.",
-      "Action Orientation: Your use of active verbs (\"refactored,\" \"initiated,\" \"deployed\") demonstrated ownership of the solution."
-    ],
-    improvements: [
-      "Quantify the Results: While you mentioned the system became \"faster,\" specific metrics would strengthen your answer.",
-      "Reduce Filler Words: You used \"like\" and \"um\" frequently during the transition from Task to Action. Pausing silently is more effective than filling the space."
-    ],
-    questions: [
-      {
-        question: "Tell me about a time you had to optimize a slow process. What was your approach?",
-        answer: "Sure. In my last internship at TechCorp, we had a legacy data pipeline that was taking about 4 hours to run every night. This was delaying our reporting dashboard updates.",
-        timestamp: "0:05"
-      },
-      {
-        question: null,
-        answer: "My task was to, um, like, figure out why it was slow. I initiated a deep dive into the logs and found that multiple redundant API calls were being made.",
-        timestamp: "0:22"
-      },
-      {
-        question: null,
-        answer: "I refactored the Python script to batch these requests. I also implemented Redis caching for static data. The result was that the pipeline ran much faster, finishing before the team arrived in the morning.",
-        timestamp: "0:45"
-      }
-    ]
-  });
+  // Get session data from navigation state (from LiveInterview)
+  const [sessionData, setSessionData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Get data from navigation state
+    if (location.state) {
+      setSessionData(location.state);
+    } else {
+      // Fallback mock data if no state (should not happen normally)
+      setSessionData({
+        date: new Date().toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        }),
+        duration: "00:00",
+        topic: "Unknown",
+        score: 0,
+        relevance: 0,
+        fluency: 0,
+        structure: 0,
+        fillerWords: 0,
+        strengths: ["No data available"],
+        improvements: ["Please complete an interview session"],
+        questions: [],
+        passed: false,
+      });
+    }
+    setLoading(false);
+  }, [location.state]);
 
   const [activeTab, setActiveTab] = useState("analysis");
+
+  // Determine if passed based on score (>50 = Pass)
+  const isPassed = (sessionData?.score || 0) > 50;
+  const passStatus = isPassed ? "Passed" : "Failed";
+  const passStatusColor = isPassed ? "text-emerald-600 bg-emerald-50" : "text-red-600 bg-red-50";
+  const passStatusIcon = isPassed ? <Award className="w-5 h-5" /> : <XCircle className="w-5 h-5" />;
 
   const getScoreColor = (score) => {
     if (score >= 80) return "text-emerald-600";
     if (score >= 60) return "text-blue-600";
-    return "text-amber-600";
+    if (score >= 50) return "text-yellow-600";
+    return "text-red-600";
   };
 
   const getScoreRingColor = (score) => {
     if (score >= 80) return "stroke-emerald-500";
     if (score >= 60) return "stroke-blue-500";
-    return "stroke-amber-500";
+    if (score >= 50) return "stroke-yellow-500";
+    return "stroke-red-500";
+  };
+
+  const getPerformanceLabel = (score) => {
+    if (score >= 80) return "Excellent";
+    if (score >= 70) return "Very Good";
+    if (score >= 60) return "Good";
+    if (score >= 50) return "Satisfactory";
+    return "Needs Improvement";
   };
 
   // Calculate circle circumference
   const radius = 80;
   const circumference = 2 * Math.PI * radius;
-  const progress = (sessionData.score / 100) * circumference;
+  const progress = ((sessionData?.score || 0) / 100) * circumference;
   const offset = circumference - progress;
+
+  // Generate report text for download
+  const generateReportText = (data) => {
+    return `
+╔══════════════════════════════════════════════════════════════╗
+║              DEVMOCK INTERVIEW FEEDBACK REPORT               ║
+╚══════════════════════════════════════════════════════════════╝
+
+Date: ${data.date}
+Duration: ${data.duration}
+Topic: ${data.topic}
+Status: ${data.score > 50 ? "PASSED ✓" : "FAILED ✗"}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 OVERALL SCORE: ${data.score}/100
+
+📈 BREAKDOWN:
+   • Relevance: ${data.relevance}%
+   • Fluency: ${data.fluency}%
+   • Structure: ${data.structure}%
+   • Filler Words: ${data.fillerWords}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💪 STRENGTHS:
+${data.strengths?.map(s => `   • ${s}`).join('\n') || '   • None'}
+
+🎯 AREAS FOR IMPROVEMENT:
+${data.improvements?.map(i => `   • ${i}`).join('\n') || '   • None'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 INTERVIEW TRANSCRIPT:
+${data.questions?.map(q => `
+Q: ${q.question}
+A: ${q.answer} (${q.timestamp})
+`).join('\n') || 'No transcript available'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 TIP: ${data.score > 50 
+  ? "Keep practicing to maintain your performance level!"
+  : "Focus on the key concepts and practice with the STAR method."}
+
+Generated by DevMock - AI-Powered Interview Coach
+    `;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading feedback...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!sessionData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto px-4">
+            <div className="text-6xl mb-4">⚠️</div>
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">No Feedback Data</h2>
+            <p className="text-gray-600 mb-6">Please complete an interview session first.</p>
+            <button
+              onClick={() => navigate("/interviewlibrary")}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              Go to Interview Library
+            </button>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
@@ -91,39 +188,67 @@ export default function FeedbackPage() {
         {/* Header with Back Button */}
         <div className="flex items-center justify-between mb-6">
           <button
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate("/interviewlibrary")}
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft size={20} />
-            <span className="text-sm font-medium">Back to Dashboard</span>
+            <span className="text-sm font-medium">Back to Library</span>
           </button>
           
           <div className="flex gap-3">
-            <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+            <button
+              onClick={() => window.print()}
+              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            >
               <Printer size={20} />
             </button>
-            <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href);
+                alert("Link copied to clipboard!");
+              }}
+              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            >
               <Copy size={20} />
             </button>
             <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
               <Share2 size={20} />
             </button>
-            <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            <button
+              onClick={() => {
+                // Generate and download report
+                const reportContent = generateReportText(sessionData);
+                const blob = new Blob([reportContent], { type: "text/plain" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `interview-feedback-${sessionData.date}.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
               <Download size={16} />
               <span className="text-sm font-medium">Download Report</span>
             </button>
           </div>
         </div>
 
-        {/* Session Info Card */}
+        {/* Session Info Card with Pass/Fail Status */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-blue-50 rounded-xl">
-                <Briefcase className="w-6 h-6 text-blue-600" />
+              <div className={`p-3 rounded-xl ${isPassed ? 'bg-emerald-50' : 'bg-red-50'}`}>
+                <Briefcase className={`w-6 h-6 ${isPassed ? 'text-emerald-600' : 'text-red-600'}`} />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Performance Analysis</h1>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-bold text-gray-900">Performance Analysis</h1>
+                  <span className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${passStatusColor}`}>
+                    {passStatusIcon}
+                    <span>{passStatus}</span>
+                  </span>
+                </div>
                 <div className="flex items-center gap-4 mt-1">
                   <div className="flex items-center gap-1 text-sm text-gray-500">
                     <Calendar size={14} />
@@ -135,16 +260,16 @@ export default function FeedbackPage() {
                   </div>
                   <div className="flex items-center gap-1 text-sm text-gray-500">
                     <Briefcase size={14} />
-                    <span>{sessionData.topic}</span>
+                    <span className="capitalize">{sessionData.topic?.replace(/%20/g, ' ')}</span>
                   </div>
                 </div>
               </div>
             </div>
             <div className="flex gap-2">
-              <button className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                View Recording
-              </button>
-              <button className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+              <button
+                onClick={() => navigate(`/interview/${encodeURIComponent(sessionData.topic)}`)}
+                className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
                 Retake Interview
               </button>
             </div>
@@ -226,27 +351,35 @@ export default function FeedbackPage() {
                     />
                     <text
                       x="100"
-                      y="100"
+                      y="90"
                       textAnchor="middle"
                       dominantBaseline="middle"
                       className="text-3xl font-bold fill-gray-900"
                     >
                       {sessionData.score}
                     </text>
+                    <text
+                      x="100"
+                      y="115"
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      className="text-xs fill-gray-500"
+                    >
+                      out of 100
+                    </text>
                   </svg>
-                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-8 whitespace-nowrap">
-                    <span className="text-sm text-gray-500">out of 100</span>
-                  </div>
                 </div>
 
                 {/* Score Details */}
                 <div className="flex-1">
                   <div className="mb-4">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-1">
-                      Strong Proficiency
+                    <h3 className={`text-xl font-semibold mb-1 ${getScoreColor(sessionData.score)}`}>
+                      {getPerformanceLabel(sessionData.score)}
                     </h3>
                     <p className="text-sm text-gray-500">
-                      High alignment with question intent and core competencies.
+                      {isPassed 
+                        ? "Congratulations! You've passed this interview assessment."
+                        : "Keep practicing! Review the feedback below to improve your score."}
                     </p>
                   </div>
 
@@ -291,8 +424,12 @@ export default function FeedbackPage() {
 
                   <div className="mt-4 p-3 bg-gray-50 rounded-lg">
                     <p className="text-sm text-gray-700">
-                      Moderate pacing. Detected <span className="font-semibold">{sessionData.fillerWords}</span> filler words ("um", "like").
-                      Clear STAR method usage. Result section could be stronger.
+                      {sessionData.fillerWords > 0 ? (
+                        <>Detected <span className="font-semibold">{sessionData.fillerWords}</span> filler words ("um", "like"). 
+                        Clear communication style. Focus on reducing filler words for more professional delivery.</>
+                      ) : (
+                        <>Excellent fluency with no filler words detected. Great job maintaining professional speech patterns!</>
+                      )}
                     </p>
                   </div>
                 </div>
@@ -311,7 +448,7 @@ export default function FeedbackPage() {
                     <h3 className="font-semibold text-emerald-800">Strengths</h3>
                   </div>
                   <ul className="space-y-3">
-                    {sessionData.strengths.map((strength, idx) => (
+                    {sessionData.strengths?.map((strength, idx) => (
                       <li key={idx} className="flex gap-2 text-sm text-emerald-700">
                         <CheckCircle size={16} className="flex-shrink-0 mt-0.5" />
                         <span>{strength}</span>
@@ -327,13 +464,10 @@ export default function FeedbackPage() {
                     <h3 className="font-semibold text-amber-800">Areas for Improvement</h3>
                   </div>
                   <ul className="space-y-3">
-                    {sessionData.improvements.map((improvement, idx) => (
+                    {sessionData.improvements?.map((improvement, idx) => (
                       <li key={idx} className="flex gap-2 text-sm text-amber-700">
                         <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
-                        <div>
-                          <span>{improvement.split(":")[0]}:</span>
-                          <span className="text-amber-600"> {improvement.split(":")[1]}</span>
-                        </div>
+                        <span>{improvement}</span>
                       </li>
                     ))}
                   </ul>
@@ -348,7 +482,7 @@ export default function FeedbackPage() {
                     <p className="text-sm font-medium text-blue-800 mb-1">Pro Tip</p>
                     <p className="text-sm text-blue-700">
                       Practice using the STAR method (Situation, Task, Action, Result) for behavioral questions. 
-                      Your answers will be more structured and impactful.
+                      Your answers will be more structured and impactful. Aim for 50+ points to pass the interview.
                     </p>
                   </div>
                 </div>
@@ -366,7 +500,7 @@ export default function FeedbackPage() {
             </div>
             
             <div className="p-6 space-y-6">
-              {sessionData.questions.map((item, idx) => (
+              {sessionData.questions?.map((item, idx) => (
                 <div key={idx} className="space-y-3">
                   {item.question && (
                     <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
@@ -380,7 +514,7 @@ export default function FeedbackPage() {
                     </div>
                   )}
                   
-                  <div className="pl-4 border-l-3 border-blue-200">
+                  <div className="pl-4 border-l-2 border-blue-200">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -398,7 +532,7 @@ export default function FeedbackPage() {
 
             <div className="p-6 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
               <p className="text-xs text-center text-gray-500">
-                © 2023 DevMock Inc. All rights reserved.
+                © 2024 DevMock Inc. All rights reserved.
               </p>
             </div>
           </div>
@@ -415,29 +549,29 @@ export default function FeedbackPage() {
                 <div>
                   <div className="mb-4">
                     <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-600">Speech Clarity</span>
-                      <span className="font-medium text-gray-900">85%</span>
+                      <span className="text-gray-600">Relevance Score</span>
+                      <span className="font-medium text-gray-900">{sessionData.relevance}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-blue-500 rounded-full h-2" style={{ width: "85%" }} />
+                      <div className="bg-emerald-500 rounded-full h-2" style={{ width: `${sessionData.relevance}%` }} />
                     </div>
                   </div>
                   <div className="mb-4">
                     <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-600">Vocabulary Range</span>
-                      <span className="font-medium text-gray-900">72%</span>
+                      <span className="text-gray-600">Fluency Score</span>
+                      <span className="font-medium text-gray-900">{sessionData.fluency}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-blue-500 rounded-full h-2" style={{ width: "72%" }} />
+                      <div className="bg-blue-500 rounded-full h-2" style={{ width: `${sessionData.fluency}%` }} />
                     </div>
                   </div>
                   <div>
                     <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-600">Confidence Score</span>
-                      <span className="font-medium text-gray-900">68%</span>
+                      <span className="text-gray-600">Structure Score</span>
+                      <span className="font-medium text-gray-900">{sessionData.structure}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-blue-500 rounded-full h-2" style={{ width: "68%" }} />
+                      <div className="bg-purple-500 rounded-full h-2" style={{ width: `${sessionData.structure}%` }} />
                     </div>
                   </div>
                 </div>
@@ -453,8 +587,9 @@ export default function FeedbackPage() {
                     </div>
                     <div className="text-center">
                       <p className="text-sm text-gray-700 mt-2">
-                        Your response demonstrates good technical knowledge. Focus on adding 
-                        quantifiable results and reducing filler words to improve impact.
+                        {isPassed 
+                          ? "Great job! Your response demonstrates good technical knowledge. Continue practicing to maintain this level."
+                          : "Your response needs improvement. Focus on addressing the key concepts and reducing filler words."}
                       </p>
                     </div>
                   </div>
@@ -495,6 +630,21 @@ export default function FeedbackPage() {
                     </p>
                   </div>
                 </div>
+                
+                {!isPassed && (
+                  <div className="flex gap-3 p-4 bg-amber-50 rounded-xl">
+                    <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <AlertCircle size={16} className="text-white" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900 mb-1">Review Core Concepts</p>
+                      <p className="text-sm text-gray-600">
+                        Focus on understanding the key technical concepts. Review the ideal answers 
+                        and practice explaining them in your own words.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -503,7 +653,7 @@ export default function FeedbackPage() {
         {/* Action Buttons */}
         <div className="mt-8 flex flex-wrap gap-4 justify-between items-center">
           <button
-            onClick={() => navigate("/practice")}
+            onClick={() => navigate("/interviewlibrary")}
             className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
           >
             Try Another Interview
@@ -516,10 +666,10 @@ export default function FeedbackPage() {
               Save Feedback
             </button>
             <button
-              onClick={() => navigate("/dashboard")}
+              onClick={() => navigate("/interviewlibrary")}
               className="px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
             >
-              Return to Dashboard
+              Return to Library
             </button>
           </div>
         </div>

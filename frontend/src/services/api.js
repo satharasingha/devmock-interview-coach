@@ -1,56 +1,83 @@
-// API Service for all backend calls
-const API_BASE_URL = "http://localhost:3000/api";
+// API Service - All backend communication
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-export const api = {
-  // Questions endpoints
-  getQuestions: async (role, difficulty = null, limit = 50) => {
-    let url = `${API_BASE_URL}/questions?role=${role}&limit=${limit}`;
-    if (difficulty) url += `&difficulty=${difficulty}`;
+/**
+ * Evaluates a user's answer using the backend API
+ * @param {string} userAnswer - The user's spoken answer (converted to text)
+ * @param {string} referenceAnswer - The ideal/reference answer for the question
+ * @param {Array<string>} coreKeywords - Array of keywords that should be present
+ * @returns {Promise<Object>} Evaluation results with scores and feedback
+ */
+export const evaluateAnswerAPI = async (userAnswer, referenceAnswer, coreKeywords) => {
+  try {
+    console.log("📡 Calling backend API for evaluation...");
     
-    const response = await fetch(url);
-    if (!response.ok) throw new Error("Failed to fetch questions");
-    return response.json();
-  },
-  
-  getRandomQuestions: async (role, limit = 10) => {
-    const response = await fetch(`${API_BASE_URL}/questions/random/${role}?limit=${limit}`);
-    if (!response.ok) throw new Error("Failed to fetch random questions");
-    return response.json();
-  },
-  
-  getQuestionById: async (id) => {
-    const response = await fetch(`${API_BASE_URL}/questions/${id}`);
-    if (!response.ok) throw new Error("Question not found");
-    return response.json();
-  },
-  
-  createQuestion: async (questionData) => {
-    const response = await fetch(`${API_BASE_URL}/questions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(questionData)
+    const response = await fetch(`${API_BASE_URL}/evaluate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userAnswer,
+        referenceAnswer,
+        coreKeywords: Array.isArray(coreKeywords) ? coreKeywords : [],
+      }),
     });
-    if (!response.ok) throw new Error("Failed to create question");
-    return response.json();
-  },
-  
-  updateQuestion: async (id, questionData) => {
-    const response = await fetch(`${API_BASE_URL}/questions/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(questionData)
-    });
-    if (!response.ok) throw new Error("Failed to update question");
-    return response.json();
-  },
-  
-  deleteQuestion: async (id) => {
-    const response = await fetch(`${API_BASE_URL}/questions/${id}`, {
-      method: "DELETE"
-    });
-    if (!response.ok) throw new Error("Failed to delete question");
-    return response.json();
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP ${response.status}`);
+    }
+
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Evaluation failed');
+    }
+    
+    console.log(`✅ Evaluation complete (${result.meta?.evaluation_method || 'unknown'}) - Score: ${result.data?.final_score}/10`);
+    return result.data;
+    
+  } catch (error) {
+    console.error('❌ API call failed:', error);
+    throw error;
   }
 };
 
-export default api;
+/**
+ * Health check endpoint to verify backend is running
+ * @returns {Promise<boolean>} True if backend is healthy
+ */
+export const healthCheck = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL.replace('/api', '')}/health`);
+    return response.ok;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Batch evaluate multiple answers
+ * @param {Array} answers - Array of answer objects
+ * @returns {Promise<Array>} Array of evaluation results
+ */
+export const batchEvaluateAnswers = async (answers) => {
+  const results = [];
+  for (const answer of answers) {
+    const result = await evaluateAnswerAPI(
+      answer.userAnswer,
+      answer.referenceAnswer,
+      answer.coreKeywords
+    );
+    results.push(result);
+  }
+  return results;
+};
+
+// Default export for convenience
+export default {
+  evaluateAnswerAPI,
+  healthCheck,
+  batchEvaluateAnswers,
+};

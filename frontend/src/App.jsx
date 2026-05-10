@@ -8,6 +8,9 @@ import Register from "./pages/Register"; // Fixed typo: Regsiter -> Register
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import FeedbackPage from "./pages/FeedbackPage";
 import AdminAddQuestion from "./pages/admin/AdminAddQuestion";
+import AdminManageJobRoles from "./pages/admin/AdminManageRoles";
+import AboutUs from "./pages/AboutUs";
+import ContactUs from "./pages/Contact";
 
 function App() {
   return (
@@ -18,15 +21,19 @@ function App() {
         <Route path="/interviewlibrary" element={<InterviewLibrary />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/about" element={<AboutUs />} />
+        <Route path="/contact" element={<ContactUs />} />
         
         {/* Interview Routes */}
         <Route path="/setup/:role" element={<InterviewSetup />} />
         <Route path="/interview/:role" element={<LiveInterview />} />
         <Route path="/feedback" element={<FeedbackPage />} />
+      
         
         {/* Admin Routes */}
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/add-question" element={<AdminAddQuestion />} />
+        <Route path="/admin/interviews" element={<AdminManageJobRoles />} />
         
         {/* 404 Catch-all route - optional */}
         <Route path="*" element={<NotFound />} />

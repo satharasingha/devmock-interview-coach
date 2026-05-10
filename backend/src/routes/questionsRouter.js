@@ -3,7 +3,7 @@ import Question from '../models/Question.js';
 
 const router = express.Router();
 
-// GET all questions
+// GET all questions (with filters)
 router.get('/', async (req, res) => {
   try {
     const { role, difficulty, limit = 50 } = req.query;
@@ -97,6 +97,27 @@ router.get('/random/:role', async (req, res) => {
     ]);
     
     res.json(questions);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// DELETE all questions for a specific job role
+router.delete('/role/:jobRole', async (req, res) => {
+  try {
+    const { jobRole } = req.params;
+    const decodedRole = decodeURIComponent(jobRole);
+    
+    const result = await Question.deleteMany({ job_role: decodedRole });
+    
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: 'No questions found for this role' });
+    }
+    
+    res.json({ 
+      message: `Deleted ${result.deletedCount} questions for ${decodedRole}`,
+      deletedCount: result.deletedCount 
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

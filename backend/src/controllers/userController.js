@@ -1,90 +1,104 @@
-import User from "../models/user.js";
-import bcrypt from "bcrypt";
+import User from "../models/User.js";
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
-dotenv.config();
+import bcrypt from "bcryptjs";
 
-export async function createUser(req, res) {
+const generateToken = (user) => {
+  return jwt.sign(
+    { id: user._id, email: user.email, isAdmin: user.isAdmin },
+    process.env.JWT_SECRET || "your_secret_key",
+    { expiresIn: "7d" }
+  );
+};
+
+export const registerUser = async (req, res) => {
   try {
-    const passwordHash = bcrypt.hashSync(req.body.password, 10);
+    console.log("=== REGISTRATION START ===");
+    console.log("Request body:", req.body);
+    
+    const { fullName, email, password } = req.body;
 
-    const newUser = new User({
-      email: req.body.email,
-      firstName: req.body.firstName,
-      lastName: req.body.lastName,
-      password: passwordHash,
-    });
-
-    await newUser.save();
-
-    res.json({
-      message: "User Created Successfully",
-    });
-  } catch (error) {
-    res.json({
-      message: "Error creating user",
-    });
-  }
-}
-
-
-
-export async function loginUser(req, res) {
-  try {
-    const user = await User.findOne({
-      email: req.body.email,
-    });
-    console.log(user);
-
-    if (user == null) {
-      res.status(404).json({
-        message: "User not found",
+    // Validate input
+    if (!fullName || !email || !password) {
+      console.log("Missing fields:", { fullName, email, password });
+      return res.status(400).json({ 
+        message: "Please provide fullName, email, and password" 
       });
-    } else {
-      const isPasswordCorrect = bcrypt.compareSync(
-        req.body.password,
-        user.password,
-      );
-
-      if (isPasswordCorrect) {
-        const payload = {
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          isAdmin: user.isAdmin,
-          isBlocked: user.isBlocked,
-          isEmailVerified: user.isEmailVerified,
-          image: user.image,
-        };
-
-        const token = jwt.sign(payload, process.env.JWT_SECRET, {
-          expiresIn: "48h",
-        });
-
-        res.json({
-          token: token,
-          isAdmin: user.isAdmin,
-        });
-      } else {
-        res.status(401).json({
-          message: "Invalid Password",
-        });
-      }
     }
+
+    // Check if user exists
+    console.log("Checking if user exists...");
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      console.log("User already exists:", email);
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    // Create user
+    console.log("Creating new user...");
+    const user = new User({
+      fullName,
+      email,
+      password,
+    });
+
+    console.log("Saving user to database...");
+    await user.save();
+    console.log("User saved successfully:", user._id);
+
+    const token = generateToken(user);
+
+    res.status(201).json({
+      success: true,
+      message: "User registered successfully",
+      token,
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        isAdmin: user.isAdmin,
+      },
+    });
   } catch (error) {
-    res.status(500).json({
-      message: "Error logging in",
+    console.error("=== REGISTRATION ERROR ===");
+    console.error("Error name:", error.name);
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
+    res.status(500).json({ 
+      message: error.message,
+      error: error.name,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined
     });
   }
-}
+};
 
-export function isAdmin(req) {
-  if (req.user == null) {
-    return false;
+export const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const token = generateToken(user);
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        isAdmin: user.isAdmin,
+      },
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ message: error.message });
   }
-  if (req.user.isAdmin) {
-    return true;
-  } else {
-    return false;
-  }
-}
+};

@@ -4,14 +4,21 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import useInterviewQuestions from "../hooks/useInterviewQuestions.js";
 import { useMediaPipeTracking } from "../hooks/useMediaPipeTracking.js";
-import { evaluateAnswer } from "../services/evaluationService.js";
+import { evaluateAnswerAPI } from "../services/api.js";
 
 export default function LiveInterview() {
   const { role } = useParams();
   const navigate = useNavigate();
 
   // Questions - Added loading and error states
-  const { question, index, total, nextQuestion, loading: questionsLoading, error: questionsError } = useInterviewQuestions(role);
+  const {
+    question,
+    index,
+    total,
+    nextQuestion,
+    loading: questionsLoading,
+    error: questionsError,
+  } = useInterviewQuestions(role);
 
   // Refs
   const videoRef = useRef(null);
@@ -68,11 +75,21 @@ export default function LiveInterview() {
 
   // Count filler words in transcript
   const countFillerWords = (text) => {
-    const fillerWords = ["um", "uh", "like", "actually", "basically", "literally", "you know", "sort of", "kind of"];
+    const fillerWords = [
+      "um",
+      "uh",
+      "like",
+      "actually",
+      "basically",
+      "literally",
+      "you know",
+      "sort of",
+      "kind of",
+    ];
     const lowerText = text.toLowerCase();
     let count = 0;
-    fillerWords.forEach(word => {
-      const regex = new RegExp(`\\b${word}\\b`, 'g');
+    fillerWords.forEach((word) => {
+      const regex = new RegExp(`\\b${word}\\b`, "g");
       const matches = lowerText.match(regex);
       if (matches) count += matches.length;
     });
@@ -83,7 +100,7 @@ export default function LiveInterview() {
   const startCamera = async () => {
     setCameraError(null);
     setPermissionDenied(false);
-    
+
     try {
       // First, check if mediaDevices is supported
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -91,22 +108,22 @@ export default function LiveInterview() {
         setCameraEnabled(false);
         return;
       }
-      
+
       // Stop any existing stream
       if (mediaStreamRef.current) {
-        mediaStreamRef.current.getTracks().forEach(track => track.stop());
+        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
       }
-      
+
       // Request camera access with specific constraints
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
           width: { ideal: 1280 },
           height: { ideal: 720 },
-          facingMode: "user"
-        }, 
-        audio: false 
+          facingMode: "user",
+        },
+        audio: false,
       });
-      
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         mediaStreamRef.current = stream;
@@ -116,9 +133,14 @@ export default function LiveInterview() {
       }
     } catch (err) {
       console.error("Camera error:", err);
-      if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+      if (
+        err.name === "NotAllowedError" ||
+        err.name === "PermissionDeniedError"
+      ) {
         setPermissionDenied(true);
-        setCameraError("Camera permission denied. Please allow camera access and refresh.");
+        setCameraError(
+          "Camera permission denied. Please allow camera access and refresh.",
+        );
       } else if (err.name === "NotFoundError") {
         setCameraError("No camera found on this device");
       } else {
@@ -131,7 +153,7 @@ export default function LiveInterview() {
   // Function to stop camera
   const stopCamera = () => {
     if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
       mediaStreamRef.current = null;
     }
     if (videoRef.current) {
@@ -147,10 +169,10 @@ export default function LiveInterview() {
       const timer = setTimeout(() => {
         startCamera();
       }, 500);
-      
+
       return () => clearTimeout(timer);
     }
-    
+
     return () => {
       stopCamera();
     };
@@ -187,7 +209,7 @@ export default function LiveInterview() {
       .split(/\s+/)
       .filter((w) => w.length > 0).length;
     const fillerCount = countFillerWords(cleanTranscript);
-    
+
     setSessionStats((prev) => ({
       ...prev,
       wordsSpoken: words,
@@ -201,7 +223,9 @@ export default function LiveInterview() {
       window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      alert("Speech recognition not supported in this browser. Please use Chrome, Edge, or Safari.");
+      alert(
+        "Speech recognition not supported in this browser. Please use Chrome, Edge, or Safari.",
+      );
       return;
     }
 
@@ -262,7 +286,7 @@ export default function LiveInterview() {
   /* End Session */
   const endSession = () => {
     stopCamera();
-    
+
     if (recognitionRef.current) {
       recognitionRef.current.stop();
       recognitionRef.current = null;
@@ -271,19 +295,18 @@ export default function LiveInterview() {
     setListening(false);
     setIsSessionActive(false);
     setCameraEnabled(false);
-    
-    // Navigate back to dashboard after ending session
+
+    // Navigate back to library after ending session
     setTimeout(() => {
       navigate("/interviewlibrary");
     }, 1500);
   };
 
-  /* Submit Answer */
+  /* Submit Answer - Now calls backend API */
   const submitAnswer = async () => {
     if (!question || !transcript.trim()) return;
 
     const cleanTranscript = transcript.replace(/\s*\[.*?\]\s*/g, "");
-
     setLoading(true);
 
     try {
@@ -294,22 +317,25 @@ export default function LiveInterview() {
       } else if (question.core_keywords) {
         keywords = question.core_keywords.split(";");
       }
-      
-      // Call evaluation service
-      const result = await evaluateAnswer({
-        userAnswer: cleanTranscript,
-        referenceAnswer: question.ideal_answer,
-        coreKeywords: keywords,
-      });
+
+      // Call backend API (which handles Gemini + local fallback)
+      const result = await evaluateAnswerAPI(
+        cleanTranscript,
+        question.ideal_answer,
+        keywords
+      );
 
       // Calculate metrics for feedback
       const relevanceScore = result.semantic_similarity || 85;
-      const fluencyScore = Math.max(0, Math.min(100, 100 - (sessionStats.fillerWords * 2)));
+      const fluencyScore = Math.max(
+        0,
+        Math.min(100, 100 - sessionStats.fillerWords * 2),
+      );
       const structureScore = result.final_score * 10;
 
       // Prepare questions array with timestamps
       const questionTimestamp = Math.max(0, sessionStats.duration - 45);
-      
+
       // Navigate to feedback page with data
       navigate("/feedback", {
         state: {
@@ -327,23 +353,23 @@ export default function LiveInterview() {
           fillerWords: sessionStats.fillerWords,
           strengths: result.strengths || [
             "Good understanding of the technical concept",
-            "Clear communication of key ideas"
+            "Clear communication of key ideas",
           ],
           improvements: result.improvements || [
             "Add more specific examples to strengthen your answer",
-            "Quantify your results with metrics when possible"
+            "Quantify your results with metrics when possible",
           ],
           questions: [
             {
               question: question.question,
               answer: cleanTranscript,
-              timestamp: formatTime(questionTimestamp)
-            }
-          ]
+              timestamp: formatTime(questionTimestamp),
+            },
+          ],
         },
       });
     } catch (err) {
-      console.error("Evaluation failed", err);
+      console.error("Evaluation failed:", err);
       alert("Error evaluating answer. Please try again.");
     } finally {
       setLoading(false);
@@ -358,8 +384,12 @@ export default function LiveInterview() {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600 font-medium">Loading interview questions...</p>
-            <p className="text-gray-400 text-sm mt-1">Please wait while we prepare your session</p>
+            <p className="text-gray-600 font-medium">
+              Loading interview questions...
+            </p>
+            <p className="text-gray-400 text-sm mt-1">
+              Please wait while we prepare your session
+            </p>
           </div>
         </div>
         <Footer />
@@ -375,11 +405,15 @@ export default function LiveInterview() {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center max-w-md mx-auto px-4">
             <div className="text-6xl mb-4">⚠️</div>
-            <h2 className="text-xl font-semibold text-gray-800 mb-2">Unable to Load Questions</h2>
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">
+              Unable to Load Questions
+            </h2>
             <p className="text-gray-600 mb-4">{questionsError}</p>
-            <p className="text-gray-500 text-sm mb-6">Please make sure your backend server is running on port 3000</p>
-            <button 
-              onClick={() => window.location.reload()} 
+            <p className="text-gray-500 text-sm mb-6">
+              Please make sure your backend server is running on port 3000
+            </p>
+            <button
+              onClick={() => window.location.reload()}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Try Again
@@ -399,12 +433,15 @@ export default function LiveInterview() {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center max-w-md mx-auto px-4">
             <div className="text-6xl mb-4">📚</div>
-            <h2 className="text-xl font-semibold text-gray-800 mb-2">No Questions Available</h2>
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">
+              No Questions Available
+            </h2>
             <p className="text-gray-600 mb-4">
-              No interview questions found for {role}. Please add questions to the database.
+              No interview questions found for {role}. Please add questions to
+              the database.
             </p>
-            <button 
-              onClick={() => navigate("/interviewlibrary")} 
+            <button
+              onClick={() => navigate("/interviewlibrary")}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Return to Library
@@ -429,7 +466,7 @@ export default function LiveInterview() {
               <p className="text-xs text-slate-500">ACTIVE SESSION</p>
               <div className="flex items-center gap-2">
                 <h2 className="font-semibold text-slate-800 capitalize">
-                  {role?.replace(/%20/g, ' ')} Interview
+                  {role?.replace(/%20/g, " ")} Interview
                 </h2>
                 <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs">
                   <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
@@ -524,10 +561,13 @@ export default function LiveInterview() {
                 <div className="absolute inset-0 bg-slate-800 flex items-center justify-center">
                   <div className="text-center max-w-xs">
                     <div className="text-4xl mb-2">⚠️</div>
-                    <p className="text-yellow-400 text-sm font-medium mb-2">{cameraError}</p>
+                    <p className="text-yellow-400 text-sm font-medium mb-2">
+                      {cameraError}
+                    </p>
                     {permissionDenied && (
                       <p className="text-slate-400 text-xs mb-3">
-                        Please allow camera access in your browser settings, then refresh the page.
+                        Please allow camera access in your browser settings,
+                        then refresh the page.
                       </p>
                     )}
                     <button
@@ -661,8 +701,8 @@ export default function LiveInterview() {
                 </h2>
                 <div className="flex flex-wrap gap-2">
                   {/* Handle both array and string formats */}
-                  {(Array.isArray(question.core_keywords) 
-                    ? question.core_keywords 
+                  {(Array.isArray(question.core_keywords)
+                    ? question.core_keywords
                     : question.core_keywords?.split(";") || []
                   ).map((keyword, i) => (
                     <span
@@ -674,7 +714,8 @@ export default function LiveInterview() {
                   ))}
                 </div>
                 <p className="text-xs text-slate-400 mt-4">
-                  💡 Speak naturally. Your answer will be evaluated for keywords and clarity.
+                  💡 Speak naturally. Your answer will be evaluated for keywords
+                  and clarity.
                 </p>
               </div>
             )}
