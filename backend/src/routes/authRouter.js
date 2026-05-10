@@ -14,6 +14,9 @@ import {
   updateUserProfile,
   saveInterviewResult,
   getInterviewHistory,
+  getInterviewDetails,
+  deleteInterview,
+  getInterviewStats,
 } from "../controllers/userController.js";
 import { protect, adminOnly } from "../middleware/authMiddleware.js";
 
@@ -32,6 +35,8 @@ router.get("/profile", protect, getUserProfile);
 router.put("/profile", protect, updateUserProfile);
 router.post("/interview/save", protect, saveInterviewResult);
 router.get("/interview/history", protect, getInterviewHistory);
+router.get("/interview/:id", protect, getInterviewDetails);
+router.delete("/interview/:id", protect, deleteInterview);
 
 // Admin only routes
 router.get("/users", protect, adminOnly, getAllUsers);

@@ -17,18 +17,24 @@ import {
   Briefcase,
   Star,
   Activity,
+  BarChart3,
+  ChevronRight,
 } from "lucide-react";
 
 export default function Profile() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [interviewHistory, setInterviewHistory] = useState([]);
+  const [interviews, setInterviews] = useState([]);
+  const [stats, setStats] = useState({
+    totalInterviews: 0,
+    averageScore: 0,
+    passedCount: 0,
+    failedCount: 0,
+    totalDuration: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-  });
+  const [formData, setFormData] = useState({ fullName: "", email: "" });
   const [message, setMessage] = useState({ type: "", text: "" });
   const [updating, setUpdating] = useState(false);
 
@@ -62,8 +68,6 @@ export default function Profile() {
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -76,10 +80,19 @@ export default function Profile() {
 
       if (response.ok) {
         const data = await response.json();
-        setInterviewHistory(data.interviewHistory || []);
+        setInterviews(data.interviews || []);
+        setStats(data.stats || {
+          totalInterviews: 0,
+          averageScore: 0,
+          passedCount: 0,
+          failedCount: 0,
+          totalDuration: 0,
+        });
       }
     } catch (error) {
       console.error("Error fetching interview history:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -103,13 +116,10 @@ export default function Profile() {
 
       if (response.ok) {
         setUser({ ...user, fullName: formData.fullName, email: formData.email });
-        
-        // Update localStorage
         const userInfo = JSON.parse(localStorage.getItem("userInfo"));
         userInfo.user.fullName = formData.fullName;
         userInfo.user.email = formData.email;
         localStorage.setItem("userInfo", JSON.stringify(userInfo));
-        
         setMessage({ type: "success", text: "Profile updated successfully!" });
         setEditing(false);
         setTimeout(() => setMessage({ type: "", text: "" }), 3000);
@@ -133,6 +143,12 @@ export default function Profile() {
     if (score >= 70) return "bg-green-100";
     if (score >= 50) return "bg-yellow-100";
     return "bg-red-100";
+  };
+
+  const formatDuration = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins} min ${secs} sec`;
   };
 
   if (loading) {
@@ -191,42 +207,36 @@ export default function Profile() {
                     <form onSubmit={handleUpdateProfile} className="text-left">
                       {message.text && (
                         <div className={`mb-4 p-3 rounded-lg text-sm ${
-                          message.type === "success" 
-                            ? "bg-green-50 text-green-700" 
-                            : "bg-red-50 text-red-700"
+                          message.type === "success" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
                         }`}>
                           {message.text}
                         </div>
                       )}
                       <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Full Name
-                        </label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                         <input
                           type="text"
                           required
                           value={formData.fullName}
                           onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
                       <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Email
-                        </label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                         <input
                           type="email"
                           required
                           value={formData.email}
                           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
                       <div className="flex gap-3">
                         <button
                           type="submit"
                           disabled={updating}
-                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                         >
                           {updating ? "Saving..." : <><Save size={16} /> Save</>}
                         </button>
@@ -237,7 +247,7 @@ export default function Profile() {
                             setFormData({ fullName: user?.fullName, email: user?.email });
                             setMessage({ type: "", text: "" });
                           }}
-                          className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                          className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
                         >
                           <X size={16} />
                         </button>
@@ -248,18 +258,46 @@ export default function Profile() {
               </div>
             </div>
 
-            {/* Interview History */}
+            {/* Interview History Section */}
             <div className="lg:col-span-2">
+              {/* Stats Summary */}
+              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6 mb-6">
+                <h3 className="font-semibold text-gray-800 mb-4">Performance Summary</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600">{stats.totalInterviews}</div>
+                    <p className="text-xs text-gray-600">Total Interviews</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">{stats.averageScore}%</div>
+                    <p className="text-xs text-gray-600">Avg Score</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-emerald-600">{stats.passedCount}</div>
+                    <p className="text-xs text-gray-600">Passed</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-red-600">{stats.failedCount}</div>
+                    <p className="text-xs text-gray-600">Failed</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-purple-600">{stats.totalDuration} min</div>
+                    <p className="text-xs text-gray-600">Total Time</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Interview History List */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-semibold text-gray-800">Interview History</h2>
                   <div className="flex items-center gap-2 text-sm text-gray-500">
                     <Activity size={16} />
-                    <span>{interviewHistory.length} interviews completed</span>
+                    <span>{interviews.length} interviews completed</span>
                   </div>
                 </div>
 
-                {interviewHistory.length === 0 ? (
+                {interviews.length === 0 ? (
                   <div className="text-center py-12">
                     <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-700 mb-2">No interviews yet</h3>
@@ -273,9 +311,9 @@ export default function Profile() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {interviewHistory.map((interview, index) => (
+                    {interviews.map((interview, index) => (
                       <div
-                        key={index}
+                        key={interview._id}
                         className="border border-gray-100 rounded-xl p-4 hover:shadow-md transition"
                       >
                         <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
@@ -289,6 +327,10 @@ export default function Profile() {
                               <div className="flex items-center gap-1">
                                 <Clock size={12} />
                                 <span>{Math.floor(interview.duration / 60)} min {interview.duration % 60} sec</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Briefcase size={12} />
+                                <span>{interview.answers?.length || 0} questions</span>
                               </div>
                             </div>
                           </div>
@@ -315,20 +357,20 @@ export default function Profile() {
                             <div className="flex flex-wrap gap-4">
                               {interview.feedback.strengths?.length > 0 && (
                                 <div className="flex-1">
-                                  <p className="text-xs font-medium text-green-600 mb-1">Strengths</p>
+                                  <p className="text-xs font-medium text-green-600 mb-1">💪 Strengths</p>
                                   <ul className="text-xs text-gray-600 space-y-1">
                                     {interview.feedback.strengths.slice(0, 2).map((s, i) => (
-                                      <li key={i}>✓ {s}</li>
+                                      <li key={i}>• {s}</li>
                                     ))}
                                   </ul>
                                 </div>
                               )}
                               {interview.feedback.improvements?.length > 0 && (
                                 <div className="flex-1">
-                                  <p className="text-xs font-medium text-amber-600 mb-1">Areas to Improve</p>
+                                  <p className="text-xs font-medium text-amber-600 mb-1">📈 Areas to Improve</p>
                                   <ul className="text-xs text-gray-600 space-y-1">
                                     {interview.feedback.improvements.slice(0, 2).map((i, idx) => (
-                                      <li key={idx}>⚠ {i}</li>
+                                      <li key={idx}>• {i}</li>
                                     ))}
                                   </ul>
                                 </div>
@@ -341,39 +383,6 @@ export default function Profile() {
                   </div>
                 )}
               </div>
-
-              {/* Stats Summary */}
-              {interviewHistory.length > 0 && (
-                <div className="mt-6 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6">
-                  <h3 className="font-semibold text-gray-800 mb-4">Performance Summary</h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-600">
-                        {interviewHistory.length}
-                      </div>
-                      <p className="text-xs text-gray-600">Total Interviews</p>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-green-600">
-                        {Math.round(interviewHistory.reduce((sum, i) => sum + i.score, 0) / interviewHistory.length)}%
-                      </div>
-                      <p className="text-xs text-gray-600">Average Score</p>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-emerald-600">
-                        {interviewHistory.filter(i => i.passed).length}
-                      </div>
-                      <p className="text-xs text-gray-600">Passed</p>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-amber-600">
-                        {interviewHistory.filter(i => !i.passed).length}
-                      </div>
-                      <p className="text-xs text-gray-600">Failed</p>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
