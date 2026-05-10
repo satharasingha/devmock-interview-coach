@@ -19,6 +19,16 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET distinct job roles - ADD THIS ENDPOINT
+router.get('/distinct-roles', async (req, res) => {
+  try {
+    const roles = await Question.distinct('job_role');
+    res.json(roles);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // GET single question by ID
 router.get('/:id', async (req, res) => {
   try {
@@ -35,7 +45,6 @@ router.get('/:id', async (req, res) => {
 // POST create new question
 router.post('/', async (req, res) => {
   try {
-    // Get the highest id if not provided
     let nextId = req.body.id;
     if (!nextId) {
       const lastQuestion = await Question.findOne().sort({ id: -1 });
