@@ -88,11 +88,11 @@ export default function LiveInterview() {
   const [isCorrecting, setIsCorrecting] = useState(false);
   const [pendingCorrection, setPendingCorrection] = useState(null);
   
-  // Store all answers for the session
-  const [allAnswers, setAllAnswers] = useState([]);
-  const [allStrengths, setAllStrengths] = useState([]);
-  const [allImprovements, setAllImprovements] = useState([]);
-  const [sessionCompleted, setSessionCompleted] = useState(false);
+  // Store current answer data for immediate save
+  const [currentAnswers, setCurrentAnswers] = useState([]);
+  const [currentStrengths, setCurrentStrengths] = useState([]);
+  const [currentImprovements, setCurrentImprovements] = useState([]);
+  const [sessionSaved, setSessionSaved] = useState(false);
 
   const {
     eyeContact,
@@ -135,8 +135,8 @@ export default function LiveInterview() {
     return count;
   };
 
-  // Save interview to database
-  const saveInterviewToHistory = async (finalScore, answers, duration, passed, strengths, improvements) => {
+  // Save interview to database - SINGLE ANSWER SAVE
+  const saveSingleAnswerToHistory = async (answerData) => {
     try {
       const userInfo = JSON.parse(localStorage.getItem("userInfo"));
       const token = userInfo?.token;
@@ -146,7 +146,7 @@ export default function LiveInterview() {
         return;
       }
       
-      console.log("Saving interview to history...");
+      console.log("Saving answer to history...", answerData);
       
       const response = await fetch("http://localhost:3000/api/auth/interview/save", {
         method: "POST",
@@ -156,51 +156,30 @@ export default function LiveInterview() {
         },
         body: JSON.stringify({
           role: role?.replace(/%20/g, " "),
-          score: finalScore,
-          duration: duration,
-          passed: passed,
-          answers: answers,
+          score: answerData.score,
+          duration: sessionStats.duration,
+          passed: answerData.score >= 60,
+          answers: [answerData],
           feedback: {
-            strengths: [...new Set(strengths)].slice(0, 3),
-            improvements: [...new Set(improvements)].slice(0, 3),
+            strengths: answerData.strengths || [],
+            improvements: answerData.improvements || [],
           },
         }),
       });
       
       if (response.ok) {
         const data = await response.json();
-        console.log("✅ Interview saved to history", data);
+        console.log("✅ Answer saved to history", data);
+        return true;
       } else {
-        console.error("Failed to save interview:", await response.text());
+        console.error("Failed to save answer:", await response.text());
+        return false;
       }
     } catch (error) {
-      console.error("Error saving interview:", error);
+      console.error("Error saving answer:", error);
+      return false;
     }
   };
-
-  // Save interview before page unload or refresh
-  useEffect(() => {
-    const handleBeforeUnload = async () => {
-      if (allAnswers.length > 0 && !sessionCompleted) {
-        const totalScore = allAnswers.reduce((sum, ans) => sum + ans.score, 0);
-        const avgScore = Math.round(totalScore / allAnswers.length);
-        const passed = avgScore >= 60;
-        
-        await saveInterviewToHistory(
-          avgScore,
-          allAnswers,
-          sessionStats.duration,
-          passed,
-          allStrengths,
-          allImprovements
-        );
-        setSessionCompleted(true);
-      }
-    };
-    
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [allAnswers, allStrengths, allImprovements, sessionStats.duration, sessionCompleted]);
 
   // Start Camera
   const startCamera = async () => {
@@ -386,42 +365,17 @@ export default function LiveInterview() {
     }
   };
 
-  // End Session and Save to History
-  const endSession = async () => {
-    console.log("Ending session...");
-    console.log("All answers count:", allAnswers.length);
-    
+  // End Session
+  const endSession = () => {
     stopCamera();
     if (recognitionRef.current) recognitionRef.current.stop();
     setListening(false);
-    
-    // Save interview to history if there are answers
-    if (allAnswers.length > 0 && !sessionCompleted) {
-      const totalScore = allAnswers.reduce((sum, ans) => sum + ans.score, 0);
-      const avgScore = Math.round(totalScore / allAnswers.length);
-      const passed = avgScore >= 60;
-      
-      console.log("Saving with avgScore:", avgScore, "passed:", passed);
-      
-      await saveInterviewToHistory(
-        avgScore,
-        allAnswers,
-        sessionStats.duration,
-        passed,
-        allStrengths,
-        allImprovements
-      );
-      setSessionCompleted(true);
-    } else {
-      console.log("No answers to save or already completed");
-    }
-    
     setIsSessionActive(false);
     setCameraEnabled(false);
     setTimeout(() => navigate("/interviewlibrary"), 1500);
   };
 
-  // Submit Answer and Store in History
+  // Submit Answer and Save to History Immediately
   const submitAnswer = async () => {
     if (!question || !transcript.trim()) return;
 
@@ -444,28 +398,33 @@ export default function LiveInterview() {
       const structureScore = result.final_score * 10;
       const questionTimestamp = Math.max(0, sessionStats.duration - 45);
       
-      // Store answer for history
-      const newAnswer = {
+      // Prepare answer data for saving
+      const answerData = {
         question: question.question,
         userAnswer: cleanTranscript,
         score: finalScore,
         matchedKeywords: result.matched_keywords || [],
         missingKeywords: result.missing_keywords || [],
         timestamp: formatTime(questionTimestamp),
+        strengths: result.strengths || ["Good understanding of the technical concept", "Clear communication of key ideas"],
+        improvements: result.improvements || ["Add more specific examples", "Quantify your results"],
       };
       
-      setAllAnswers(prev => [...prev, newAnswer]);
+      // SAVE IMMEDIATELY to database
+      await saveSingleAnswerToHistory(answerData);
       
-      // Collect strengths and improvements
+      // Update local state (optional - for any local tracking)
+      setCurrentAnswers(prev => [...prev, answerData]);
       if (result.strengths) {
-        setAllStrengths(prev => [...prev, ...result.strengths]);
+        setCurrentStrengths(prev => [...prev, ...result.strengths]);
       }
       if (result.improvements) {
-        setAllImprovements(prev => [...prev, ...result.improvements]);
+        setCurrentImprovements(prev => [...prev, ...result.improvements]);
       }
       
-      console.log("Answer saved. Total answers:", allAnswers.length + 1);
+      console.log("Answer submitted and saved. Score:", finalScore);
 
+      // Navigate to feedback page
       navigate("/feedback", {
         state: {
           date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
@@ -489,23 +448,14 @@ export default function LiveInterview() {
     }
   };
 
-  // Handle Next Question - Check if last question
+  // Handle Next Question (just go to next, no save needed - already saved)
   const handleNextQuestion = () => {
-    console.log("Current index:", index, "Total:", total);
-    
     stopListening();
     setTranscript("");
     setFeedback(null);
     setPendingCorrection(null);
     setInterimTranscript("");
-    
-    // Check if this was the last question
-    if (index + 1 >= total) {
-      console.log("Last question completed, ending session...");
-      endSession();
-    } else {
-      nextQuestion();
-    }
+    nextQuestion();
   };
 
   // Loading States
