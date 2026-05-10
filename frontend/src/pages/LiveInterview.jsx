@@ -88,7 +88,7 @@ export default function LiveInterview() {
   const [isCorrecting, setIsCorrecting] = useState(false);
   const [pendingCorrection, setPendingCorrection] = useState(null);
   
-  // NEW: Store all answers for the session
+  // Store all answers for the session
   const [allAnswers, setAllAnswers] = useState([]);
   const [allStrengths, setAllStrengths] = useState([]);
   const [allImprovements, setAllImprovements] = useState([]);
@@ -135,7 +135,7 @@ export default function LiveInterview() {
     return count;
   };
 
-  // NEW: Save interview to database
+  // Save interview to database
   const saveInterviewToHistory = async (finalScore, answers, duration, passed, strengths, improvements) => {
     try {
       const userInfo = JSON.parse(localStorage.getItem("userInfo"));
@@ -145,6 +145,8 @@ export default function LiveInterview() {
         console.log("No token found, skipping save");
         return;
       }
+      
+      console.log("Saving interview to history...");
       
       const response = await fetch("http://localhost:3000/api/auth/interview/save", {
         method: "POST",
@@ -166,7 +168,8 @@ export default function LiveInterview() {
       });
       
       if (response.ok) {
-        console.log("✅ Interview saved to history");
+        const data = await response.json();
+        console.log("✅ Interview saved to history", data);
       } else {
         console.error("Failed to save interview:", await response.text());
       }
@@ -174,6 +177,30 @@ export default function LiveInterview() {
       console.error("Error saving interview:", error);
     }
   };
+
+  // Save interview before page unload or refresh
+  useEffect(() => {
+    const handleBeforeUnload = async () => {
+      if (allAnswers.length > 0 && !sessionCompleted) {
+        const totalScore = allAnswers.reduce((sum, ans) => sum + ans.score, 0);
+        const avgScore = Math.round(totalScore / allAnswers.length);
+        const passed = avgScore >= 60;
+        
+        await saveInterviewToHistory(
+          avgScore,
+          allAnswers,
+          sessionStats.duration,
+          passed,
+          allStrengths,
+          allImprovements
+        );
+        setSessionCompleted(true);
+      }
+    };
+    
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [allAnswers, allStrengths, allImprovements, sessionStats.duration, sessionCompleted]);
 
   // Start Camera
   const startCamera = async () => {
@@ -276,12 +303,12 @@ export default function LiveInterview() {
 
     recognition.onstart = () => {
       setListening(true);
-      console.log("🎤 Listening...");
+      console.log("Listening...");
     };
     
     recognition.onend = () => {
       setListening(false);
-      console.log("🎤 Stopped listening");
+      console.log("Stopped listening");
     };
 
     recognition.onresult = async (event) => {
@@ -359,8 +386,11 @@ export default function LiveInterview() {
     }
   };
 
-  // NEW: End Session and Save to History
+  // End Session and Save to History
   const endSession = async () => {
+    console.log("Ending session...");
+    console.log("All answers count:", allAnswers.length);
+    
     stopCamera();
     if (recognitionRef.current) recognitionRef.current.stop();
     setListening(false);
@@ -371,6 +401,8 @@ export default function LiveInterview() {
       const avgScore = Math.round(totalScore / allAnswers.length);
       const passed = avgScore >= 60;
       
+      console.log("Saving with avgScore:", avgScore, "passed:", passed);
+      
       await saveInterviewToHistory(
         avgScore,
         allAnswers,
@@ -380,6 +412,8 @@ export default function LiveInterview() {
         allImprovements
       );
       setSessionCompleted(true);
+    } else {
+      console.log("No answers to save or already completed");
     }
     
     setIsSessionActive(false);
@@ -387,7 +421,7 @@ export default function LiveInterview() {
     setTimeout(() => navigate("/interviewlibrary"), 1500);
   };
 
-  // NEW: Submit Answer and Store in History
+  // Submit Answer and Store in History
   const submitAnswer = async () => {
     if (!question || !transcript.trim()) return;
 
@@ -410,23 +444,27 @@ export default function LiveInterview() {
       const structureScore = result.final_score * 10;
       const questionTimestamp = Math.max(0, sessionStats.duration - 45);
       
-      // NEW: Store answer for history
-      setAllAnswers(prev => [...prev, {
+      // Store answer for history
+      const newAnswer = {
         question: question.question,
         userAnswer: cleanTranscript,
         score: finalScore,
         matchedKeywords: result.matched_keywords || [],
         missingKeywords: result.missing_keywords || [],
         timestamp: formatTime(questionTimestamp),
-      }]);
+      };
       
-      // NEW: Collect strengths and improvements
+      setAllAnswers(prev => [...prev, newAnswer]);
+      
+      // Collect strengths and improvements
       if (result.strengths) {
         setAllStrengths(prev => [...prev, ...result.strengths]);
       }
       if (result.improvements) {
         setAllImprovements(prev => [...prev, ...result.improvements]);
       }
+      
+      console.log("Answer saved. Total answers:", allAnswers.length + 1);
 
       navigate("/feedback", {
         state: {
@@ -451,10 +489,29 @@ export default function LiveInterview() {
     }
   };
 
+  // Handle Next Question - Check if last question
+  const handleNextQuestion = () => {
+    console.log("Current index:", index, "Total:", total);
+    
+    stopListening();
+    setTranscript("");
+    setFeedback(null);
+    setPendingCorrection(null);
+    setInterimTranscript("");
+    
+    // Check if this was the last question
+    if (index + 1 >= total) {
+      console.log("Last question completed, ending session...");
+      endSession();
+    } else {
+      nextQuestion();
+    }
+  };
+
   // Loading States
   if (questionsLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#f8faff] to-white flex flex-col">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
@@ -469,7 +526,7 @@ export default function LiveInterview() {
 
   if (questionsError) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#f8faff] to-white flex flex-col">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center max-w-md mx-auto px-4">
@@ -488,7 +545,7 @@ export default function LiveInterview() {
 
   if (!question && !questionsLoading && !questionsError) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#f8faff] to-white flex flex-col">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center max-w-md mx-auto px-4">
@@ -507,7 +564,7 @@ export default function LiveInterview() {
 
   // Main UI
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#f8faff] to-white flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
       <Navbar />
 
       {/* Top Bar */}
@@ -775,14 +832,7 @@ export default function LiveInterview() {
                 Submit
               </button>
               <button
-                onClick={() => {
-                  stopListening();
-                  setTranscript("");
-                  setFeedback(null);
-                  setPendingCorrection(null);
-                  setInterimTranscript("");
-                  nextQuestion();
-                }}
+                onClick={handleNextQuestion}
                 disabled={!isSessionActive || loading}
                 className="flex-1 px-4 py-3 rounded-xl bg-slate-700 hover:bg-slate-800 text-white text-sm font-medium disabled:opacity-50"
               >
