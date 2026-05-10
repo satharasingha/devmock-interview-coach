@@ -33,11 +33,11 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    // Create new user (password will be hashed by pre-save middleware)
+    // Create new user
     const user = new User({
       fullName,
       email: email.toLowerCase(),
-      password: password, // Plain password, model will hash it
+      password,
     });
 
     await user.save();
@@ -97,8 +97,8 @@ export const loginUser = async (req, res) => {
       });
     }
 
-    // Check password using promise-based method
-    const isPasswordValid = await user.comparePasswordAsync(password);
+    // Check password - Using the CORRECT method name
+    const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
       return res.status(401).json({ 
         success: false,
