@@ -5,46 +5,46 @@ import bcrypt from "bcryptjs";
 const generateToken = (user) => {
   return jwt.sign(
     { id: user._id, email: user.email, isAdmin: user.isAdmin },
-    process.env.JWT_SECRET || "your_secret_key",
+    process.env.JWT_SECRET || "your_secret_key_here",
     { expiresIn: "7d" }
   );
 };
 
+// Register User
 export const registerUser = async (req, res) => {
   try {
-    console.log("=== REGISTRATION START ===");
-    console.log("Request body:", req.body);
-    
     const { fullName, email, password } = req.body;
+
+    console.log("Registration attempt:", { fullName, email });
 
     // Validate input
     if (!fullName || !email || !password) {
-      console.log("Missing fields:", { fullName, email, password });
       return res.status(400).json({ 
+        success: false,
         message: "Please provide fullName, email, and password" 
       });
     }
 
-    // Check if user exists
-    console.log("Checking if user exists...");
-    const existingUser = await User.findOne({ email });
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
-      console.log("User already exists:", email);
-      return res.status(400).json({ message: "User already exists" });
+      return res.status(400).json({ 
+        success: false,
+        message: "User already exists with this email" 
+      });
     }
 
-    // Create user
-    console.log("Creating new user...");
+    // Create new user
     const user = new User({
       fullName,
-      email,
+      email: email.toLowerCase(),
       password,
     });
 
-    console.log("Saving user to database...");
     await user.save();
-    console.log("User saved successfully:", user._id);
+    console.log("User created successfully:", user._id);
 
+    // Generate token
     const token = generateToken(user);
 
     res.status(201).json({
@@ -59,36 +59,64 @@ export const registerUser = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("=== REGISTRATION ERROR ===");
-    console.error("Error name:", error.name);
-    console.error("Error message:", error.message);
-    console.error("Error stack:", error.stack);
+    console.error("Registration error:", error);
     res.status(500).json({ 
-      message: error.message,
-      error: error.name,
-      stack: process.env.NODE_ENV === "development" ? error.stack : undefined
+      success: false,
+      message: error.message || "Server error during registration" 
     });
   }
 };
 
+// Login User
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    console.log("Login attempt:", { email });
+
+    if (!email || !password) {
+      return res.status(400).json({ 
+        success: false,
+        message: "Please provide email and password" 
+      });
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res.status(401).json({ 
+        success: false,
+        message: "Invalid email or password" 
+      });
     }
 
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(401).json({ message: "Invalid credentials" });
+    // Check if user is blocked
+    if (user.isBlocked) {
+      return res.status(403).json({ 
+        success: false,
+        message: "Account has been blocked. Contact support." 
+      });
     }
 
+    // Check password
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ 
+        success: false,
+        message: "Invalid email or password" 
+      });
+    }
+
+    // Update last login
+    user.lastLogin = new Date();
+    await user.save();
+
+    // Generate token
     const token = generateToken(user);
 
     res.json({
       success: true,
+      message: "Login successful",
       token,
       user: {
         id: user._id,
@@ -99,6 +127,32 @@ export const loginUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ 
+      success: false,
+      message: error.message || "Server error during login" 
+    });
+  }
+};
+
+// Get Current User
+export const getCurrentUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        message: "User not found" 
+      });
+    }
+    res.json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    console.error("Get user error:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Server error" 
+    });
   }
 };

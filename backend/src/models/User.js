@@ -4,19 +4,19 @@ import bcrypt from "bcryptjs";
 const userSchema = new mongoose.Schema({
   fullName: {
     type: String,
-    required: true,
+    required: [true, "Full name is required"],
     trim: true,
   },
   email: {
     type: String,
-    required: true,
+    required: [true, "Email is required"],
     unique: true,
     lowercase: true,
     trim: true,
   },
   password: {
     type: String,
-    required: true,
+    required: [true, "Password is required"],
   },
   isAdmin: {
     type: Boolean,
@@ -39,14 +39,13 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-// Hash password before saving - ASYNC VERSION
-userSchema.pre("save", async function(next) {
+// Hash password before saving - FIXED VERSION
+userSchema.pre("save", async function (next) {
   try {
     // Only hash if password is modified
     if (!this.isModified("password")) {
       return next();
     }
-    
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
     next();
@@ -56,8 +55,8 @@ userSchema.pre("save", async function(next) {
 });
 
 // Compare password method
-userSchema.methods.comparePassword = async function(candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
+userSchema.methods.comparePassword = async function (candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
 };
 
 const User = mongoose.model("User", userSchema);
