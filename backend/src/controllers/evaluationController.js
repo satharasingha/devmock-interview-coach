@@ -1,9 +1,8 @@
-import { evaluateWithGemini } from '../services/geminiService.js';
+import { evaluateWithGroq } from '../services/groqService.js';
 import { evaluateLocally } from '../services/localEvaluationService.js';
-import { CONSTANTS } from '../utils/constants.js';
 
 /**
- * Main evaluation controller - tries Gemini first, falls back to local
+ * Main evaluation controller - tries Groq first, falls back to local
  */
 export const evaluateAnswer = async (req, res, next) => {
   const startTime = Date.now();
@@ -19,26 +18,27 @@ export const evaluateAnswer = async (req, res, next) => {
       });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
     let result;
     let evaluationMethod = 'local';
-    
-    // Try Gemini API first if key is valid
-    if (apiKey && apiKey !== CONSTANTS.INVALID_API_KEY_PLACEHOLDER) {
-      try {
-        console.log('🤖 Attempting Gemini API evaluation...');
-        result = await evaluateWithGemini(userAnswer, referenceAnswer, coreKeywords, apiKey);
-        evaluationMethod = 'gemini';
-        console.log(`✅ Gemini evaluation successful (${Date.now() - startTime}ms)`);
-      } catch (geminiError) {
-        console.warn(`⚠️ Gemini API failed: ${geminiError.message}. Falling back to local evaluation.`);
-        result = evaluateLocally(userAnswer, referenceAnswer, coreKeywords);
-        evaluationMethod = 'local_fallback';
+    let groqError = null;
+
+    // Try Groq API first
+    try {
+      console.log('🤖 Attempting Groq API evaluation...');
+      const groqResult = await evaluateWithGroq(userAnswer, referenceAnswer, coreKeywords);
+      
+      if (groqResult) {
+        result = groqResult;
+        evaluationMethod = 'groq';
+        console.log(`✅ Groq evaluation successful (${Date.now() - startTime}ms)`);
+      } else {
+        throw new Error('Groq returned null result');
       }
-    } else {
-      console.log('📝 Using local evaluation (no valid API key)');
+    } catch (groqError) {
+      groqError = error;
+      console.warn(`⚠️ Groq API failed: ${error.message}. Falling back to local evaluation.`);
       result = evaluateLocally(userAnswer, referenceAnswer, coreKeywords);
-      evaluationMethod = 'local';
+      evaluationMethod = 'local_fallback';
     }
     
     // Add metadata to response
@@ -48,7 +48,8 @@ export const evaluateAnswer = async (req, res, next) => {
       meta: {
         evaluation_method: evaluationMethod,
         processing_time_ms: Date.now() - startTime,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        groq_error: groqError?.message || null,
       }
     };
     

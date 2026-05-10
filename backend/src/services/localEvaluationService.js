@@ -1,5 +1,5 @@
 /**
- * Local fallback evaluation when Gemini API is unavailable
+ * Local fallback evaluation when Groq API is unavailable
  */
 export const evaluateLocally = (userAnswer, referenceAnswer, coreKeywords) => {
   if (!userAnswer || userAnswer.trim().length === 0) {
@@ -12,6 +12,8 @@ export const evaluateLocally = (userAnswer, referenceAnswer, coreKeywords) => {
       strengths: ['You started answering the question'],
       improvements: ['Please provide a complete answer to the question'],
       word_count: 0,
+      filler_word_count: 0,
+      evaluation_method: "local",
     };
   }
 
@@ -59,11 +61,13 @@ export const evaluateLocally = (userAnswer, referenceAnswer, coreKeywords) => {
     improvements: improvements.slice(0, 3),
     word_count: userAnswer.split(/\s+/).filter(w => w.length > 0).length,
     filler_word_count: countFillerWords(userAnswer),
+    evaluation_method: "local",
   };
 };
 
 /**
  * Calculates semantic similarity between answers
+ * Compares word overlap and key phrase matching
  */
 const calculateSemanticSimilarity = (userAnswer, referenceAnswer) => {
   if (!userAnswer || !referenceAnswer) return 0;
@@ -71,30 +75,64 @@ const calculateSemanticSimilarity = (userAnswer, referenceAnswer) => {
   const userLower = userAnswer.toLowerCase();
   const refLower = referenceAnswer.toLowerCase();
   
+  // Word-based similarity
   const userWords = new Set(userLower.split(/\s+/).filter(w => w.length > 3));
   const refWords = new Set(refLower.split(/\s+/).filter(w => w.length > 3));
   
   const intersection = new Set([...userWords].filter(x => refWords.has(x)));
   const union = new Set([...userWords, ...refWords]);
   
-  const similarity = union.size > 0 
+  const wordSimilarity = union.size > 0 
     ? (intersection.size / union.size) * 100 
     : 0;
   
-  return Math.min(100, Math.max(15, similarity));
+  // Sentence-based similarity
+  const userSentences = userLower.split(/[.!?]+/).filter(s => s.trim().length > 0);
+  const refSentences = refLower.split(/[.!?]+/).filter(s => s.trim().length > 0);
+  
+  let sentenceSimilarity = 0;
+  if (userSentences.length > 0 && refSentences.length > 0) {
+    let totalMatches = 0;
+    userSentences.forEach(userSentence => {
+      const userSentenceWords = new Set(userSentence.trim().split(/\s+/));
+      let bestMatch = 0;
+      refSentences.forEach(refSentence => {
+        const refSentenceWords = new Set(refSentence.trim().split(/\s+/));
+        const sentenceIntersection = [...userSentenceWords].filter(w => refSentenceWords.has(w));
+        const matchScore = userSentenceWords.size > 0 
+          ? (sentenceIntersection.length / userSentenceWords.size) * 100 
+          : 0;
+        bestMatch = Math.max(bestMatch, matchScore);
+      });
+      totalMatches += bestMatch;
+    });
+    sentenceSimilarity = totalMatches / userSentences.length;
+  }
+  
+  // Combined similarity (70% word, 30% sentence)
+  const combinedSimilarity = (wordSimilarity * 0.7) + (sentenceSimilarity * 0.3);
+  
+  return Math.min(100, Math.max(15, combinedSimilarity));
 };
 
 /**
  * Counts filler words in the answer
  */
 const countFillerWords = (text) => {
-  const fillerWords = ['um', 'uh', 'like', 'actually', 'basically', 'literally', 'you know'];
+  const fillerWords = [
+    'um', 'uh', 'like', 'actually', 'basically', 'literally', 'you know',
+    'sort of', 'kind of', 'well', 'so', 'just', 'maybe', 'perhaps',
+    'i mean', 'you see', 'to be honest', 'honestly'
+  ];
   let count = 0;
+  const lowerText = text.toLowerCase();
+  
   fillerWords.forEach(fw => {
     const regex = new RegExp(`\\b${fw}\\b`, 'gi');
-    const matches = text.match(regex);
+    const matches = lowerText.match(regex);
     if (matches) count += matches.length;
   });
+  
   return count;
 };
 
@@ -106,23 +144,27 @@ const generateFeedback = (matchedKeywords, missingKeywords, coreKeywordList, sem
   const improvements = [];
 
   // Keyword feedback
-  if (matchedKeywords.length >= coreKeywordList.length * 0.7) {
-    strengths.push(`Excellent coverage of key concepts (${matchedKeywords.length}/${coreKeywordList.length} keywords)`);
-  } else if (matchedKeywords.length >= coreKeywordList.length * 0.4) {
-    strengths.push(`Good attempt - covered ${matchedKeywords.length} out of ${coreKeywordList.length} key concepts`);
-  } else if (matchedKeywords.length > 0) {
-    strengths.push(`Identified some key concepts: ${matchedKeywords.join(', ')}`);
-  } else {
-    improvements.push('Include technical keywords like: ' + coreKeywordList.slice(0, 3).join(', '));
+  if (coreKeywordList.length > 0) {
+    if (matchedKeywords.length >= coreKeywordList.length * 0.7) {
+      strengths.push(`Excellent coverage of key concepts (${matchedKeywords.length}/${coreKeywordList.length} keywords found)`);
+    } else if (matchedKeywords.length >= coreKeywordList.length * 0.4) {
+      strengths.push(`Good attempt - covered ${matchedKeywords.length} out of ${coreKeywordList.length} key concepts`);
+    } else if (matchedKeywords.length > 0) {
+      strengths.push(`Identified some key concepts: ${matchedKeywords.join(', ')}`);
+    } else {
+      improvements.push(`Include technical keywords like: ${coreKeywordList.slice(0, 3).join(', ')}`);
+    }
   }
 
   // Semantic feedback
-  if (semanticSimilarity > 70) {
-    strengths.push('Your answer aligns well with expected response');
-  } else if (semanticSimilarity > 50) {
-    strengths.push('Response partially matches expected content');
+  if (semanticSimilarity > 75) {
+    strengths.push('Your answer aligns very well with the expected response');
+  } else if (semanticSimilarity > 55) {
+    strengths.push('Response captures the main ideas from the ideal answer');
+  } else if (semanticSimilarity > 35) {
+    improvements.push('Focus on directly addressing the specific question asked');
   } else {
-    improvements.push('Focus on directly answering the question asked');
+    improvements.push('Restructure your answer to better align with the question requirements');
   }
 
   // Length feedback
@@ -132,25 +174,61 @@ const generateFeedback = (matchedKeywords, missingKeywords, coreKeywordList, sem
   } else if (wordCount > 200) {
     improvements.push('Try to be more concise - focus on quality over quantity');
   } else if (wordCount >= 50 && wordCount <= 150) {
-    strengths.push('Optimal answer length - detailed but not overwhelming');
+    strengths.push(`Optimal answer length - ${wordCount} words is detailed but focused`);
+  } else if (wordCount > 0) {
+    strengths.push(`Good answer length (${wordCount} words)`);
   }
 
   // Filler word feedback
   const fillerCount = countFillerWords(userAnswer);
-  if (fillerCount > 5) {
-    improvements.push(`Used ${fillerCount} filler words - practice pausing instead`);
-  } else if (fillerCount > 2) {
-    improvements.push(`Used ${fillerCount} filler words - try to reduce them`);
+  if (fillerCount > 8) {
+    improvements.push(`Used ${fillerCount} filler words - practice pausing instead of using "um" or "like"`);
+  } else if (fillerCount > 3) {
+    improvements.push(`Used ${fillerCount} filler words - try to reduce them for more professional delivery`);
   } else if (fillerCount > 0) {
     strengths.push(`Good fluency with minimal filler words (only ${fillerCount})`);
+  } else if (wordCount > 10) {
+    strengths.push('Excellent fluency - no filler words detected');
   }
 
+  // Missing keywords feedback
   if (missingKeywords.length > 0 && missingKeywords.length <= 3) {
     improvements.push(`Consider adding these key terms: ${missingKeywords.join(', ')}`);
+  } else if (missingKeywords.length > 3) {
+    improvements.push(`Missing several important concepts: ${missingKeywords.slice(0, 3).join(', ')} and more`);
   }
 
-  if (strengths.length === 0) strengths.push('You completed the answer');
-  if (improvements.length === 0) improvements.push('Great answer! Continue practicing');
+  // Specific feedback for common missing concepts
+  if (missingKeywords.some(k => k.toLowerCase().includes('example'))) {
+    improvements.push("Add concrete examples to strengthen your answer");
+  }
+  if (missingKeywords.some(k => k.toLowerCase().includes('result') || k.toLowerCase().includes('metric'))) {
+    improvements.push("Quantify your results with specific metrics when possible");
+  }
+  if (missingKeywords.some(k => k.toLowerCase().includes('structure') || k.toLowerCase().includes('approach'))) {
+    improvements.push("Structure your answer using a clear framework (e.g., STAR method)");
+  }
+
+  // Ensure we always have at least one strength and one improvement
+  if (strengths.length === 0 && wordCount > 0) {
+    strengths.push('You provided an answer - let\'s work on making it more complete');
+  } else if (strengths.length === 0) {
+    strengths.push('You started answering the question');
+  }
+  
+  if (improvements.length === 0 && strengths.length > 0) {
+    improvements.push('Great answer! Continue practicing to maintain this level');
+  } else if (improvements.length === 0) {
+    improvements.push('Review the ideal answer to understand what key points were missed');
+  }
 
   return { strengths, improvements };
+};
+
+// Export all functions for use in other modules
+export default {
+  evaluateLocally,
+  calculateSemanticSimilarity,
+  countFillerWords,
+  generateFeedback,
 };
