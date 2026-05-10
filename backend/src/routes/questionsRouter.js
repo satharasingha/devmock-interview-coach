@@ -132,4 +132,19 @@ router.delete('/role/:jobRole', async (req, res) => {
   }
 });
 
+// GET question count for a specific role
+router.get('/count', async (req, res) => {
+  try {
+    const { role } = req.query;
+    const query = {};
+    
+    if (role) query.job_role = role;
+    
+    const count = await Question.countDocuments(query);
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 export default router;

@@ -9,39 +9,40 @@ export default function InterviewLibrary() {
   const [selectedType, setSelectedType] = useState("all");
   const [selectedLevel, setSelectedLevel] = useState("all");
   const [jobRoles, setJobRoles] = useState([]);
+  const [questionCounts, setQuestionCounts] = useState({});
   const [loading, setLoading] = useState(true);
 
   // Fetch job roles from database
   useEffect(() => {
-    fetchJobRoles();
+    fetchJobRolesAndCounts();
   }, []);
 
-  const fetchJobRoles = async () => {
+  const fetchJobRolesAndCounts = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/questions/distinct-roles");
-      if (response.ok) {
-        const roles = await response.json();
+      // Fetch distinct roles
+      const rolesResponse = await fetch("http://localhost:3000/api/questions/distinct-roles");
+      if (rolesResponse.ok) {
+        const roles = await rolesResponse.json();
         setJobRoles(roles);
+        
+        // Fetch question count for each role
+        const counts = {};
+        for (const role of roles) {
+          const countResponse = await fetch(`http://localhost:3000/api/questions/count?role=${encodeURIComponent(role)}`);
+          if (countResponse.ok) {
+            const data = await countResponse.json();
+            counts[role] = data.count;
+          } else {
+            counts[role] = 0;
+          }
+        }
+        setQuestionCounts(counts);
       }
     } catch (error) {
       console.error("Error fetching job roles:", error);
     } finally {
       setLoading(false);
     }
-  };
-
-  // Get question count for each role
-  const getQuestionCount = async (role) => {
-    try {
-      const response = await fetch(`http://localhost:3000/api/questions?role=${encodeURIComponent(role)}`);
-      if (response.ok) {
-        const questions = await response.json();
-        return questions.length;
-      }
-    } catch (error) {
-      console.error("Error fetching question count:", error);
-    }
-    return 0;
   };
 
   // Role metadata configuration
@@ -91,7 +92,6 @@ export default function InterviewLibrary() {
       }
     };
 
-    // Default metadata for any role
     return metadata[roleTitle] || {
       description: `Practice ${roleTitle} interview questions and improve your technical skills.`,
       color: "from-blue-500 to-cyan-500",
@@ -128,12 +128,13 @@ export default function InterviewLibrary() {
     { value: "senior", label: "Senior" },
   ];
 
-  // Build roles array with metadata
+  // Build roles array with metadata and real question counts
   const rolesWithMetadata = jobRoles.map(role => ({
     title: role,
     ...getRoleMetadata(role),
     icon: getRoleIcon(role),
-    questions: `${Math.floor(Math.random() * 30) + 20}+ questions`
+    questionCount: questionCounts[role] || 0,
+    questions: `${questionCounts[role] || 0}+ questions`
   }));
 
   // Filter roles based on search, type, and level
@@ -144,6 +145,9 @@ export default function InterviewLibrary() {
     const matchesLevel = selectedLevel === "all" || role.level.toLowerCase().includes(selectedLevel.toLowerCase());
     return matchesSearch && matchesType && matchesLevel;
   });
+
+  // Calculate total questions across all roles
+  const totalQuestions = Object.values(questionCounts).reduce((sum, count) => sum + count, 0);
 
   if (loading) {
     return (
@@ -171,7 +175,7 @@ export default function InterviewLibrary() {
             <div className="relative group">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/30 to-cyan-500/30 rounded-full blur-md"></div>
               <span className="relative text-xs font-medium text-blue-700 bg-blue-50/80 backdrop-blur-sm px-4 py-2 rounded-full inline-block border border-blue-100">
-                ✦ INTERVIEW LIBRARY
+                INTERVIEW LIBRARY
               </span>
             </div>
           </div>
@@ -194,11 +198,11 @@ export default function InterviewLibrary() {
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-              <span className="text-xs sm:text-sm text-slate-500">AI-Powered Feedback</span>
+              <span className="text-xs sm:text-sm text-slate-500">{totalQuestions}+ Questions</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-violet-400 rounded-full animate-pulse"></div>
-              <span className="text-xs sm:text-sm text-slate-500">Real-time Evaluation</span>
+              <span className="text-xs sm:text-sm text-slate-500">AI-Powered Feedback</span>
             </div>
           </div>
         </div>
