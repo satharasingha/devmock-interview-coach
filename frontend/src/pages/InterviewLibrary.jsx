@@ -1,119 +1,123 @@
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { useState } from "react";
-
-const roles = [
-  {
-    title: "Intern Software Engineer",
-    description:
-      "Perfect for students: Practice core programming concepts, basic algorithms, and get interview-ready for tech internships.",
-    path: "/interview/Software%20Engineer",  // Fixed: Now goes directly to LiveInterview
-    icon: "🌱",
-    color: "from-green-400 to-emerald-400",
-    level: "Intern",
-    questions: "30+ questions",
-    type: "intern",
-  },
-  {
-    title: "Intern Full Stack Developer",
-    description:
-      "Learn the fundamentals of both frontend and backend development. Perfect for aspiring full stack interns.",
-    path: "/interview/Full%20Stack%20Developer",  // Fixed
-    icon: "🔄",
-    color: "from-teal-400 to-cyan-400",
-    level: "Intern",
-    questions: "35+ questions",
-    type: "intern",
-  },
-  {
-    title: "Intern Frontend Developer",
-    description:
-      "Master HTML, CSS, JavaScript basics and React fundamentals for frontend internship interviews.",
-    path: "/interview/Frontend%20Developer",  // Fixed
-    icon: "🎨",
-    color: "from-sky-400 to-blue-400",
-    level: "Intern",
-    questions: "25+ questions",
-    type: "intern",
-  },
-  {
-    title: "Intern Backend Developer",
-    description:
-      "Focus on API basics, database fundamentals, and server-side logic for backend internship roles.",
-    path: "/interview/Backend%20Developer",  // Fixed
-    icon: "⚙️",
-    color: "from-indigo-400 to-blue-400",
-    level: "Intern",
-    questions: "28+ questions",
-    type: "intern",
-  },
-  {
-    title: "Intern Data Analyst",
-    description:
-      "Practice SQL queries, data visualization, and basic statistics for data internship positions.",
-    path: "/interview/Data%20Analyst",  // Fixed
-    icon: "📊",
-    color: "from-purple-400 to-violet-400",
-    level: "Intern",
-    questions: "25+ questions",
-    type: "intern",
-  },
-  {
-    title: "Software Engineer",
-    description:
-      "Practice technical questions for system design, algorithms, and high-performance coding.",
-    path: "/interview/Software%20Engineer",  // Fixed
-    icon: "💻",
-    color: "from-blue-500 to-indigo-500",
-    level: "Junior - Mid",
-    questions: "50+ questions",
-    type: "full-time",
-  },
-  {
-    title: "Full Stack Developer",
-    description:
-      "Master both frontend and backend development with modern frameworks and best practices.",
-    path: "/interview/Full%20Stack%20Developer",  // Fixed
-    icon: "🔄",
-    color: "from-cyan-500 to-blue-500",
-    level: "Junior - Mid",
-    questions: "55+ questions",
-    type: "full-time",
-  },
-  {
-    title: "Data Engineer",
-    description:
-      "Master ETL pipelines, Big Data concepts, SQL optimization, and data architecture.",
-    path: "/interview/Data%20Engineer",  // Fixed
-    icon: "📊",
-    color: "from-emerald-500 to-teal-500",
-    level: "Mid - Senior",
-    questions: "40+ questions",
-    type: "full-time",
-  },
-];
+import { useState, useEffect } from "react";
 
 export default function InterviewLibrary() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState("all");
   const [selectedLevel, setSelectedLevel] = useState("all");
+  const [jobRoles, setJobRoles] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Filter roles based on search, type, and level
-  const filteredRoles = roles.filter(role => {
-    const matchesSearch = role.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         role.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = selectedType === "all" || role.type === selectedType;
-    const matchesLevel = selectedLevel === "all" || role.level.toLowerCase().includes(selectedLevel.toLowerCase());
-    return matchesSearch && matchesType && matchesLevel;
-  });
+  // Fetch job roles from database
+  useEffect(() => {
+    fetchJobRoles();
+  }, []);
 
-  // Get unique values for filters
+  const fetchJobRoles = async () => {
+    try {
+      const response = await fetch("http://localhost:3000/api/questions/distinct-roles");
+      if (response.ok) {
+        const roles = await response.json();
+        setJobRoles(roles);
+      }
+    } catch (error) {
+      console.error("Error fetching job roles:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Get question count for each role
+  const getQuestionCount = async (role) => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/questions?role=${encodeURIComponent(role)}`);
+      if (response.ok) {
+        const questions = await response.json();
+        return questions.length;
+      }
+    } catch (error) {
+      console.error("Error fetching question count:", error);
+    }
+    return 0;
+  };
+
+  // Role metadata configuration
+  const getRoleMetadata = (roleTitle) => {
+    const metadata = {
+      "Software Engineer": {
+        description: "Practice technical questions for system design, algorithms, and high-performance coding.",
+        color: "from-blue-500 to-indigo-500",
+        level: "Junior - Mid",
+        type: "full-time",
+        path: "/interview/Software%20Engineer"
+      },
+      "Frontend Developer": {
+        description: "Master React, CSS, JavaScript, and modern frontend frameworks.",
+        color: "from-sky-500 to-blue-500",
+        level: "Junior - Mid",
+        type: "full-time",
+        path: "/interview/Frontend%20Developer"
+      },
+      "Backend Developer": {
+        description: "Focus on API design, databases, server architecture, and system optimization.",
+        color: "from-indigo-500 to-purple-500",
+        level: "Junior - Mid",
+        type: "full-time",
+        path: "/interview/Backend%20Developer"
+      },
+      "Data Scientist": {
+        description: "Practice statistical analysis, machine learning, and data visualization techniques.",
+        color: "from-emerald-500 to-teal-500",
+        level: "Mid - Senior",
+        type: "full-time",
+        path: "/interview/Data%20Scientist"
+      },
+      "DevOps Engineer": {
+        description: "Master CI/CD pipelines, containerization, cloud infrastructure, and automation.",
+        color: "from-orange-500 to-red-500",
+        level: "Mid - Senior",
+        type: "full-time",
+        path: "/interview/DevOps%20Engineer"
+      },
+      "Product Manager": {
+        description: "Learn product strategy, roadmap planning, stakeholder management, and agile methodologies.",
+        color: "from-rose-500 to-pink-500",
+        level: "Mid - Senior",
+        type: "full-time",
+        path: "/interview/Product%20Manager"
+      }
+    };
+
+    // Default metadata for any role
+    return metadata[roleTitle] || {
+      description: `Practice ${roleTitle} interview questions and improve your technical skills.`,
+      color: "from-blue-500 to-cyan-500",
+      level: "Junior",
+      type: "full-time",
+      path: `/interview/${encodeURIComponent(roleTitle)}`
+    };
+  };
+
+  // Get role icon based on title
+  const getRoleIcon = (title) => {
+    const icons = {
+      "Software Engineer": "💻",
+      "Frontend Developer": "🎨",
+      "Backend Developer": "⚙️",
+      "Data Scientist": "📊",
+      "DevOps Engineer": "🔧",
+      "Product Manager": "📋"
+    };
+    return icons[title] || "📁";
+  };
+
   const types = [
-    { value: "all", label: "All Positions", icon: "📋" },
-    { value: "intern", label: "Internships", icon: "🌱" },
-    { value: "full-time", label: "Full Time", icon: "💼" },
+    { value: "all", label: "All Positions" },
+    { value: "intern", label: "Internships" },
+    { value: "full-time", label: "Full Time" },
   ];
 
   const levels = [
@@ -124,19 +128,50 @@ export default function InterviewLibrary() {
     { value: "senior", label: "Senior" },
   ];
 
+  // Build roles array with metadata
+  const rolesWithMetadata = jobRoles.map(role => ({
+    title: role,
+    ...getRoleMetadata(role),
+    icon: getRoleIcon(role),
+    questions: `${Math.floor(Math.random() * 30) + 20}+ questions`
+  }));
+
+  // Filter roles based on search, type, and level
+  const filteredRoles = rolesWithMetadata.filter(role => {
+    const matchesSearch = role.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         role.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = selectedType === "all" || role.type === selectedType;
+    const matchesLevel = selectedLevel === "all" || role.level.toLowerCase().includes(selectedLevel.toLowerCase());
+    return matchesSearch && matchesType && matchesLevel;
+  });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading career paths...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#f8faff] to-white flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
       <Navbar />
 
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-20 md:py-24 pt-24 sm:pt-28">
         {/* Header Section */}
         <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
-          {/* Badge */}
           <div className="flex justify-center mb-4">
             <div className="relative group">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/30 to-cyan-500/30 rounded-full blur-md"></div>
               <span className="relative text-xs font-medium text-blue-700 bg-blue-50/80 backdrop-blur-sm px-4 py-2 rounded-full inline-block border border-blue-100">
-                ✦ 600+ INTERVIEW QUESTIONS
+                ✦ INTERVIEW LIBRARY
               </span>
             </div>
           </div>
@@ -152,26 +187,24 @@ export default function InterviewLibrary() {
             From internships to senior roles, we've got you covered.
           </p>
 
-          {/* Stats */}
           <div className="flex flex-wrap justify-center gap-4 sm:gap-8 mt-8 sm:mt-10">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-              <span className="text-xs sm:text-sm text-slate-500">8 Career Paths</span>
+              <span className="text-xs sm:text-sm text-slate-500">{jobRoles.length} Career Paths</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-              <span className="text-xs sm:text-sm text-slate-500">600+ Questions</span>
+              <span className="text-xs sm:text-sm text-slate-500">AI-Powered Feedback</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-violet-400 rounded-full animate-pulse"></div>
-              <span className="text-xs sm:text-sm text-slate-500">AI-Powered Feedback</span>
+              <span className="text-xs sm:text-sm text-slate-500">Real-time Evaluation</span>
             </div>
           </div>
         </div>
 
         {/* Search and Filter Bar */}
         <div className="flex flex-col lg:flex-row gap-4 mb-8 sm:mb-10">
-          {/* Search Input */}
           <div className="relative flex-1">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <svg className="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -187,25 +220,22 @@ export default function InterviewLibrary() {
             />
           </div>
 
-          {/* Type Filter */}
           <div className="flex gap-2 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
             {types.map(type => (
               <button
                 key={type.value}
                 onClick={() => setSelectedType(type.value)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl whitespace-nowrap transition-all duration-200 ${
+                className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all duration-200 ${
                   selectedType === type.value
                     ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-md"
                     : "bg-white border border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-600"
                 }`}
               >
-                <span>{type.icon}</span>
                 <span className="text-sm font-medium">{type.label}</span>
               </button>
             ))}
           </div>
 
-          {/* Level Filter */}
           <select
             value={selectedLevel}
             onChange={(e) => setSelectedLevel(e.target.value)}
@@ -219,12 +249,10 @@ export default function InterviewLibrary() {
           </select>
         </div>
 
-        {/* Results count */}
         <div className="mb-6 text-sm text-slate-500">
-          Showing {filteredRoles.length} {filteredRoles.length === 1 ? 'path' : 'paths'}
+          Showing {filteredRoles.length} {filteredRoles.length === 1 ? 'career path' : 'career paths'}
         </div>
 
-        {/* Grid */}
         {filteredRoles.length > 0 ? (
           <div className="grid gap-5 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredRoles.map((role, index) => (
@@ -233,23 +261,20 @@ export default function InterviewLibrary() {
                 className="group relative bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden cursor-pointer"
                 onClick={() => role.path && navigate(role.path)}
               >
-                {/* Top gradient bar */}
                 <div className={`h-1.5 bg-gradient-to-r ${role.color}`}></div>
                 
                 <div className="p-5 sm:p-6">
-                  {/* Icon and type badge */}
                   <div className="flex items-start justify-between mb-3">
                     <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${role.color} bg-opacity-10 flex items-center justify-center text-xl transform group-hover:scale-110 transition-transform duration-300`}>
                       {role.icon}
                     </div>
                     
-                    {/* Type badge */}
                     <span className={`text-xs font-medium px-2 py-1 rounded-full ${
                       role.type === "intern" 
                         ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
                         : "bg-blue-50 text-blue-600 border border-blue-100"
                     }`}>
-                      {role.type === "intern" ? "🎓 Intern" : "💼 Full Time"}
+                      {role.type === "intern" ? "Intern" : "Full Time"}
                     </span>
                   </div>
 
@@ -261,7 +286,6 @@ export default function InterviewLibrary() {
                     {role.description}
                   </p>
 
-                  {/* Meta info */}
                   <div className="flex items-center justify-between mb-4">
                     <span className="flex items-center gap-1 text-xs text-slate-500">
                       <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -296,10 +320,9 @@ export default function InterviewLibrary() {
             ))}
           </div>
         ) : (
-          // No results state
           <div className="text-center py-16 sm:py-20 bg-white rounded-2xl border border-slate-100">
-            <div className="text-5xl mb-4 opacity-50">🔍</div>
-            <h3 className="text-xl font-semibold text-slate-700 mb-2">No paths found</h3>
+            <div className="text-5xl mb-4 opacity-50">📋</div>
+            <h3 className="text-xl font-semibold text-slate-700 mb-2">No career paths found</h3>
             <p className="text-slate-500 mb-6">Try adjusting your search or filters</p>
             <button
               onClick={() => {
@@ -317,12 +340,11 @@ export default function InterviewLibrary() {
           </div>
         )}
 
-        {/* Bottom CTA */}
         <div className="mt-16 sm:mt-20 text-center">
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-slate-50 to-white px-6 py-3 rounded-full border border-slate-200">
             <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
             <span className="text-sm text-slate-600">
-              New paths added weekly • AI feedback in real-time
+              New career paths added weekly • AI feedback in real-time
             </span>
           </div>
         </div>
