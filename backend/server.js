@@ -10,7 +10,7 @@ import questionRoutes from './src/routes/questionsRouter.js';
 import { errorHandler } from './src/middleware/errorHandler.js';
 import authRoutes from './src/routes/authRouter.js'
 import contactRoutes from './src/routes/contactRoutes.js';
-
+import correctionRoutes from './src/routes/correctionRoutes.js';
 // Debug: Check if email credentials are loaded
 console.log('=== ENVIRONMENT VARIABLES CHECK ===');
 console.log('EMAIL_USER:', process.env.EMAIL_USER ? '✅ Loaded' : '❌ Missing');
@@ -39,6 +39,7 @@ app.use("/api/auth", authRoutes);
 app.use('/api/evaluate', evaluationRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/correct', correctionRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
