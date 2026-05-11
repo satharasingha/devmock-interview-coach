@@ -6,11 +6,8 @@ import {
   Briefcase,
   TrendingUp,
   Activity,
-  ChevronRight,
-  Calendar,
-  Download,
-  Filter,
   Search,
+  Filter,
   MoreVertical,
   ArrowUp,
   ArrowDown,
@@ -18,13 +15,6 @@ import {
   UserCheck,
   Clock,
   Award,
-  BarChart3,
-  LineChart,
-  Settings,
-  LogOut,
-  Menu,
-  X,
-  Eye,
   RefreshCw,
 } from "lucide-react";
 
@@ -32,7 +22,6 @@ export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   
-  // Real data states
   const [metrics, setMetrics] = useState({
     totalStudents: 0,
     totalInterviews: 0,
@@ -48,7 +37,6 @@ export default function AdminDashboard() {
   const [interviews, setInterviews] = useState([]);
   const itemsPerPage = 5;
 
-  // Fetch all data on component mount
   useEffect(() => {
     fetchDashboardData();
   }, []);
@@ -77,34 +65,39 @@ export default function AdminDashboard() {
       if (usersResponse.ok) {
         const usersResult = await usersResponse.json();
         usersData = usersResult.users || usersResult || [];
-        console.log("Users data:", usersData);
+        console.log("Users data:", usersData.length);
       }
       setUsers(usersData);
       
-      // 3. Fetch interviews from database
-      const interviewsResponse = await fetch('http://localhost:3000/api/auth/interview/history', {
+      // 3. Fetch ALL interviews (Admin endpoint)
+      const interviewsResponse = await fetch('http://localhost:3000/api/auth/interviews/all', {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
       let interviewsData = [];
       if (interviewsResponse.ok) {
         const interviewsResult = await interviewsResponse.json();
-        interviewsData = interviewsResult.interviews || [];
-        console.log("Interviews data:", interviewsData);
+        console.log("Interviews API response:", interviewsResult);
+        
+        if (interviewsResult.interviews && Array.isArray(interviewsResult.interviews)) {
+          interviewsData = interviewsResult.interviews;
+        } else if (Array.isArray(interviewsResult)) {
+          interviewsData = interviewsResult;
+        }
       }
       setInterviews(interviewsData);
+      console.log("Final interviews count:", interviewsData.length);
       
       // Calculate metrics
       const totalStudents = usersData.filter(u => !u.isAdmin).length;
       const totalInterviewsCount = interviewsData.length;
       
-      // Calculate average score from interviews
       let avgScore = 0;
       if (interviewsData.length > 0) {
         const totalScore = interviewsData.reduce((sum, i) => sum + (i.score || 0), 0);
         avgScore = Math.round(totalScore / interviewsData.length);
       }
       
-      // Active sessions (interviews in last 30 minutes)
       const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
       const activeSessions = interviewsData.filter(i => {
         if (!i.createdAt) return false;
@@ -118,9 +111,8 @@ export default function AdminDashboard() {
         activeSessions,
       });
       
-      // Format recent interviews for table
+      // Format recent interviews
       const formattedInterviews = interviewsData.slice(0, 20).map(interview => {
-        // Find student by matching userId with _id
         const student = usersData.find(u => u._id === interview.userId);
         const passed = (interview.score || 0) >= 60;
         
@@ -145,7 +137,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // Get top skills from questions
   const getSkillProficiency = () => {
     if (!questions.length) {
       return [
@@ -165,25 +156,25 @@ export default function AdminDashboard() {
     
     questions.forEach(q => {
       const text = (q.question + " " + (q.category || "")).toLowerCase();
-      if (text.includes("algorithm") || text.includes("sort") || text.includes("search") || text.includes("data structure")) {
+      if (text.includes("algorithm") || text.includes("sort") || text.includes("search")) {
         skills["Algorithms"].total++;
         if (q.difficulty === "Easy") skills["Algorithms"].count += 70;
         else if (q.difficulty === "Medium") skills["Algorithms"].count += 50;
         else skills["Algorithms"].count += 30;
       }
-      if (text.includes("system") || text.includes("design") || text.includes("architect") || text.includes("scalability")) {
+      if (text.includes("system") || text.includes("design") || text.includes("architect")) {
         skills["System Design"].total++;
         if (q.difficulty === "Easy") skills["System Design"].count += 70;
         else if (q.difficulty === "Medium") skills["System Design"].count += 50;
         else skills["System Design"].count += 30;
       }
-      if (text.includes("behavioral") || text.includes("soft skill") || text.includes("teamwork") || text.includes("leadership")) {
+      if (text.includes("behavioral") || text.includes("soft skill")) {
         skills["Behavioral"].total++;
         if (q.difficulty === "Easy") skills["Behavioral"].count += 70;
         else if (q.difficulty === "Medium") skills["Behavioral"].count += 50;
         else skills["Behavioral"].count += 30;
       }
-      if (text.includes("database") || text.includes("sql") || text.includes("mongodb") || text.includes("query")) {
+      if (text.includes("database") || text.includes("sql") || text.includes("mongodb")) {
         skills["Databases"].total++;
         if (q.difficulty === "Easy") skills["Databases"].count += 70;
         else if (q.difficulty === "Medium") skills["Databases"].count += 50;
@@ -199,7 +190,6 @@ export default function AdminDashboard() {
     ];
   };
 
-  // Get interview volume data for last 30 days
   const getInterviewVolumeData = () => {
     const last30Days = [];
     const today = new Date();
@@ -218,7 +208,6 @@ export default function AdminDashboard() {
       last30Days.push(count);
     }
     
-    // If no data, return zeros
     return last30Days;
   };
 
@@ -226,14 +215,11 @@ export default function AdminDashboard() {
   const interviewVolumeData = getInterviewVolumeData();
   const maxVolume = Math.max(...interviewVolumeData, 1);
 
-  // Filter recent interviews based on search
   const filteredInterviews = recentInterviews.filter(interview =>
     interview.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    interview.topic.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (interview.email && interview.email.toLowerCase().includes(searchTerm.toLowerCase()))
+    interview.topic.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Pagination
   const totalPages = Math.ceil(filteredInterviews.length / itemsPerPage);
   const paginatedInterviews = filteredInterviews.slice(
     (currentPage - 1) * itemsPerPage,
@@ -270,143 +256,86 @@ export default function AdminDashboard() {
 
       <main className="lg:pl-64 pt-16">
         <div className="px-4 sm:px-6 lg:px-8 py-8">
-          {/* Welcome Section */}
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
-            <p className="text-gray-600 mt-1">
-              Welcome back. Here is the latest performance data for the platform.
-            </p>
+            <p className="text-gray-600 mt-1">Welcome back. Here is the latest performance data.</p>
           </div>
 
           {/* Metrics Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {/* Total Students */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="bg-blue-500 p-3 rounded-lg">
                   <Users className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-xs text-gray-400">Total registered</span>
               </div>
               <h3 className="text-2xl font-bold text-gray-900">{metrics.totalStudents.toLocaleString()}</h3>
-              <div className="flex items-center gap-1 mt-1">
-                {getChangeIcon("up")}
-                <span className="text-sm font-medium text-green-600">+{Math.floor(metrics.totalStudents * 0.12) || 5}%</span>
-                <span className="text-xs text-gray-500 ml-1">vs last month</span>
-              </div>
               <p className="text-sm text-gray-600 mt-2">Total Students</p>
             </div>
 
-            {/* Total Interviews */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="bg-green-500 p-3 rounded-lg">
                   <Briefcase className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-xs text-gray-400">All time</span>
               </div>
               <h3 className="text-2xl font-bold text-gray-900">{metrics.totalInterviews.toLocaleString()}</h3>
-              <div className="flex items-center gap-1 mt-1">
-                {getChangeIcon("up")}
-                <span className="text-sm font-medium text-green-600">+{Math.floor(metrics.totalInterviews * 0.05) || 2}%</span>
-                <span className="text-xs text-gray-500 ml-1">vs last month</span>
-              </div>
               <p className="text-sm text-gray-600 mt-2">Total Interviews</p>
             </div>
 
-            {/* Average Score */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="bg-purple-500 p-3 rounded-lg">
                   <Award className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-xs text-gray-400">Across all users</span>
               </div>
               <h3 className="text-2xl font-bold text-gray-900">{metrics.averageScore}/100</h3>
-              <div className="flex items-center gap-1 mt-1">
-                {getChangeIcon(metrics.averageScore > 50 ? "up" : "down")}
-                <span className={`text-sm font-medium ${metrics.averageScore > 50 ? "text-green-600" : "text-red-600"}`}>
-                  {metrics.averageScore > 50 ? `+${Math.floor(metrics.averageScore * 0.02)}%` : `-${Math.floor(metrics.averageScore * 0.02)}%`}
-                </span>
-                <span className="text-xs text-gray-500 ml-1">vs last month</span>
-              </div>
               <p className="text-sm text-gray-600 mt-2">Average Score</p>
             </div>
 
-            {/* Active Sessions */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="bg-orange-500 p-3 rounded-lg">
                   <Activity className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-xs text-gray-400">Last 30 minutes</span>
               </div>
               <h3 className="text-2xl font-bold text-gray-900">{metrics.activeSessions}</h3>
-              <div className="flex items-center gap-1 mt-1">
-                {getChangeIcon("neutral")}
-                <span className="text-sm font-medium text-gray-600">Stable</span>
-                <span className="text-xs text-gray-500 ml-1">vs last hour</span>
-              </div>
               <p className="text-sm text-gray-600 mt-2">Active Sessions</p>
             </div>
           </div>
 
           {/* Charts Section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            {/* Interview Volume Chart */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="font-semibold text-gray-900">Interview Volume Trends</h3>
-                  <p className="text-sm text-gray-500">Daily completed sessions over the last 30 days</p>
-                </div>
-                <div className="flex gap-2">
-                  <button className="text-xs px-3 py-1 bg-green-100 text-green-700 rounded-lg font-medium">
-                    {metrics.totalInterviews > 0 ? `${Math.floor((interviewVolumeData[interviewVolumeData.length - 1] / (interviewVolumeData[0] || 1)) * 100)}%` : "0%"} Growth
-                  </button>
-                  <button className="p-1 hover:bg-gray-100 rounded">
-                    <MoreVertical size={16} />
-                  </button>
+                  <p className="text-sm text-gray-500">Last 30 days</p>
                 </div>
               </div>
-
               <div className="mt-6">
                 <div className="h-64 relative">
                   <div className="flex items-end justify-between h-full gap-1">
                     {interviewVolumeData.map((value, idx) => (
                       <div key={idx} className="flex-1 flex flex-col items-center">
                         <div
-                          className="w-full bg-blue-500 rounded-t transition-all duration-500 hover:bg-blue-600"
+                          className="w-full bg-blue-500 rounded-t transition-all duration-500"
                           style={{ height: `${(value / maxVolume) * 180}px` }}
                         />
                       </div>
                     ))}
                   </div>
                 </div>
-                <div className="flex justify-between mt-4 text-xs text-gray-500">
-                  <span>Day 1</span>
-                  <span>Day 5</span>
-                  <span>Day 10</span>
-                  <span>Day 15</span>
-                  <span>Day 20</span>
-                  <span>Day 25</span>
-                  <span>Day 30</span>
-                </div>
               </div>
             </div>
 
-            {/* Skill Proficiency Chart */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="font-semibold text-gray-900">Skill Proficiency</h3>
                   <p className="text-sm text-gray-500">Distribution across user base</p>
                 </div>
-                <button className="p-1 hover:bg-gray-100 rounded">
-                  <MoreVertical size={16} />
-                </button>
               </div>
-
               <div className="space-y-4 mt-6">
                 {skillData.map((skill, idx) => (
                   <div key={idx}>
@@ -415,14 +344,7 @@ export default function AdminDashboard() {
                       <span className="font-medium text-gray-900">{skill.percentage}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full ${
-                          skill.name === "Algorithms" ? "bg-blue-500" :
-                          skill.name === "System Design" ? "bg-green-500" :
-                          skill.name === "Behavioral" ? "bg-purple-500" : "bg-orange-500"
-                        }`}
-                        style={{ width: `${skill.percentage}%` }}
-                      />
+                      <div className="h-2 rounded-full bg-blue-500" style={{ width: `${skill.percentage}%` }} />
                     </div>
                   </div>
                 ))}
@@ -430,7 +352,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Recent Interviews Table - Action Button Removed */}
+          {/* Recent Interviews Table */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between flex-wrap gap-4">
@@ -443,16 +365,12 @@ export default function AdminDashboard() {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <input
                       type="text"
-                      placeholder="Search students..."
+                      placeholder="Search..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm"
                     />
                   </div>
-                  <button className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 flex items-center gap-2">
-                    <Filter size={16} />
-                    Filter
-                  </button>
                   <button
                     onClick={fetchDashboardData}
                     className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 flex items-center gap-2"
@@ -468,7 +386,7 @@ export default function AdminDashboard() {
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Student Name</th>
+                    <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Student</th>
                     <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
                     <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Topic</th>
                     <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Score</th>
@@ -479,29 +397,27 @@ export default function AdminDashboard() {
                 <tbody className="divide-y divide-gray-200">
                   {paginatedInterviews.length > 0 ? (
                     paginatedInterviews.map((interview, idx) => (
-                      <tr key={idx} className="hover:bg-gray-50 transition">
+                      <tr key={idx} className="hover:bg-gray-50">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <div className="h-8 w-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center">
-                              <span className="text-sm font-medium text-white">{interview.name.charAt(0)}</span>
+                              <span className="text-white text-sm font-medium">{interview.name.charAt(0)}</span>
                             </div>
                             <span className="font-medium text-gray-900">{interview.name}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-gray-500 text-sm">{interview.email || "—"}</td>
+                        <td className="px-6 py-4 text-gray-500 text-sm">{interview.email}</td>
                         <td className="px-6 py-4">
                           <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">{interview.topic}</span>
                         </td>
                         <td className="px-6 py-4">
-                          <span className={`font-semibold ${interview.score >= 70 ? "text-green-600" : interview.score >= 50 ? "text-yellow-600" : "text-red-600"}`}>
+                          <span className={`font-semibold ${interview.score >= 70 ? "text-green-600" : "text-red-600"}`}>
                             {interview.score}
                           </span>
                         </td>
                         <td className="px-6 py-4">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            interview.status === "Passed" 
-                              ? "bg-green-100 text-green-700" 
-                              : "bg-red-100 text-red-700"
+                            interview.status === "Passed" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
                           }`}>
                             {interview.status}
                           </span>
@@ -514,11 +430,9 @@ export default function AdminDashboard() {
                   ) : (
                     <tr>
                       <td colSpan="6" className="text-center py-12">
-                        <div className="text-center">
-                          <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                          <p className="text-gray-500">No interviews found</p>
-                          <p className="text-gray-400 text-sm mt-1">Complete an interview to see data here</p>
-                        </div>
+                        <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                        <p className="text-gray-500">No interviews found</p>
+                        <p className="text-gray-400 text-sm mt-1">Complete an interview to see data here</p>
                       </td>
                     </tr>
                   )}
@@ -533,7 +447,7 @@ export default function AdminDashboard() {
                   <button
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="px-3 py-1 border rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-1 border rounded text-sm hover:bg-gray-50 disabled:opacity-50"
                   >
                     Previous
                   </button>
@@ -541,15 +455,15 @@ export default function AdminDashboard() {
                     <button
                       key={i}
                       onClick={() => setCurrentPage(i + 1)}
-                      className={`px-3 py-1 rounded text-sm ${currentPage === i + 1 ? "bg-blue-600 text-white" : "border hover:bg-gray-50"}`}
+                      className={`px-3 py-1 rounded text-sm ${currentPage === i + 1 ? "bg-blue-600 text-white" : "border"}`}
                     >
                       {i + 1}
                     </button>
                   ))}
                   <button
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages || totalPages === 0}
-                    className="px-3 py-1 border rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 border rounded text-sm hover:bg-gray-50 disabled:opacity-50"
                   >
                     Next
                   </button>

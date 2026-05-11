@@ -16,6 +16,8 @@ import {
   getInterviewHistory,
   getInterviewDetails,
   deleteInterview,
+  getAllInterviews,
+  getAdminInterviewStats,
 } from "../controllers/userController.js";
 import { protect, adminOnly } from "../middleware/authMiddleware.js";
 
@@ -27,6 +29,8 @@ router.post("/login", loginUser);
 router.post("/forgot-password", forgotPassword);
 router.get("/verify-reset-token/:token", verifyResetToken);
 router.post("/reset-password/:token", resetPassword);
+router.get("/interviews/all", protect, adminOnly, getAllInterviews);
+router.get("/interviews/stats", protect, adminOnly, getAdminInterviewStats);
 
 // Protected routes (requires login)
 router.get("/me", protect, getCurrentUser);

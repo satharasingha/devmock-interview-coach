@@ -569,3 +569,59 @@ export const toggleAdminUser = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+
+// ==================== ADMIN INTERVIEW FUNCTIONS ====================
+
+// Get all interviews for all users (Admin only)
+export const getAllInterviews = async (req, res) => {
+  try {
+    console.log("Admin fetching all interviews");
+    
+    const interviews = await Interview.find({})
+      .sort({ createdAt: -1 })
+      .limit(100);
+    
+    console.log(`Found ${interviews.length} total interviews`);
+    
+    res.json({
+      success: true,
+      interviews: interviews,
+      total: interviews.length,
+    });
+  } catch (error) {
+    console.error("Get all interviews error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// Get interview statistics for all users (Admin only)
+export const getAdminInterviewStats = async (req, res) => {
+  try {
+    const totalInterviews = await Interview.countDocuments();
+    const avgScore = await Interview.aggregate([
+      { $group: { _id: null, avg: { $avg: "$score" } } }
+    ]);
+    const passedCount = await Interview.countDocuments({ passed: true });
+    const failedCount = await Interview.countDocuments({ passed: false });
+    
+    // Get interviews by role
+    const interviewsByRole = await Interview.aggregate([
+      { $group: { _id: "$role", count: { $sum: 1 } } }
+    ]);
+    
+    res.json({
+      success: true,
+      stats: {
+        totalInterviews,
+        averageScore: avgScore[0]?.avg || 0,
+        passedCount,
+        failedCount,
+        interviewsByRole,
+      }
+    });
+  } catch (error) {
+    console.error("Get admin stats error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};

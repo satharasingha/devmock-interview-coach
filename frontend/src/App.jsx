@@ -15,6 +15,8 @@ import ResetPassword from "./pages/ResetPassword";
 import AdminUserManagement from "./pages/admin/AdminUserManagement";
 import Profile from "./pages/UserProfile";
 import Resources from "./pages/Resources";
+import AdminAnalytics from "./pages/admin/AdminAnalytic";
+
 function App() {
   return (
     <Router>
@@ -41,7 +43,7 @@ function App() {
         <Route path="/admin/add-question" element={<AdminAddQuestion />} />
         <Route path="/admin/interviews" element={<AdminManageJobRoles />} />
         <Route path="/admin/users" element={<AdminUserManagement />} />
-        
+        <Route path="/admin/analytics" element={<AdminAnalytics />} />
         {/* 404 Catch-all route - optional */}
         <Route path="*" element={<NotFound />} />
       </Routes>
