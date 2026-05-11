@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Users,
   Briefcase,
@@ -16,7 +16,18 @@ import {
 
 const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
+
+  // Handle logout
+  const handleLogout = () => {
+    // Clear user data from localStorage
+    localStorage.removeItem("userInfo");
+    // Navigate to home page
+    navigate("/");
+    // Reload page to reset state
+    window.location.reload();
+  };
 
   // Navigation items
   const navItems = {
@@ -185,10 +196,11 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
             </div>
           </div>
 
-          {/* Logout Button */}
+          {/* Logout Button Section */}
           <div className="p-4 border-t border-gray-200">
             <button
-              className={`flex items-center gap-3 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg w-full transition-colors
+              onClick={handleLogout}
+              className={`flex items-center gap-3 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg w-full transition-colors group
                 ${collapsed ? "justify-center" : ""}`}
             >
               <LogOut size={20} className={collapsed ? "mx-auto" : ""} />
