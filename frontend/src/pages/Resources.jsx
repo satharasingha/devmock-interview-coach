@@ -1,4 +1,39 @@
-import { useState } from "react";import Navbar from "../components/Navbar";import Footer from "../components/Footer";import {  BookOpen,  Code,  Briefcase,  Wrench,  Users,  FileText,  Youtube,  Link as LinkIcon,  Download,  ExternalLink,  Search,  Star,  Clock,  Award,  ChevronRight,  GraduationCap,  Lightbulb,  Target,  TrendingUp,  CheckSquare,  GitHub,  Calendar,  Mail,  UserPlus,  PlayCircle,  FileCheck,  Sparkles,} from "lucide-react";
+import { useState } from "react";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+// Import only icons that definitely exist in lucide-react
+import {
+  BookOpen,
+  Code,
+  Briefcase,
+  Wrench,
+  Users,
+  FileText,
+  Youtube,
+  Link,
+  Download,
+  ExternalLink,
+  Search,
+  Star,
+  Clock,
+  Award,
+  ChevronRight,
+  GraduationCap,
+  Lightbulb,
+  Target,
+  TrendingUp,
+  CheckSquare,
+  Calendar,
+  Mail,
+  UserPlus,
+  PlayCircle,
+  FileCheck,
+  Sparkles,
+  // Note: Use "Github" not "GitHub" (lowercase 'h' only)
+} from "lucide-react";
+
+// Import Github separately with correct name
+import { Github } from "lucide-react";
 
 export default function Resources() {
   const [searchTerm, setSearchTerm] = useState("");
