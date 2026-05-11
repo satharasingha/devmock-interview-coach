@@ -79,7 +79,6 @@ export default function LiveInterview() {
   const [transcript, setTranscript] = useState("");
   const [interimTranscript, setInterimTranscript] = useState("");
   const [listening, setListening] = useState(false);
-  const [feedback, setFeedback] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isSessionActive, setIsSessionActive] = useState(true);
   const [cameraEnabled, setCameraEnabled] = useState(false);
@@ -88,11 +87,11 @@ export default function LiveInterview() {
   const [isCorrecting, setIsCorrecting] = useState(false);
   const [pendingCorrection, setPendingCorrection] = useState(null);
   
-  // Store current answer data for immediate save
-  const [currentAnswers, setCurrentAnswers] = useState([]);
-  const [currentStrengths, setCurrentStrengths] = useState([]);
-  const [currentImprovements, setCurrentImprovements] = useState([]);
-  const [sessionSaved, setSessionSaved] = useState(false);
+  // Store ALL answers for the session (submitted at the end)
+  const [allAnswers, setAllAnswers] = useState([]);
+  const [isReviewMode, setIsReviewMode] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [answersSaved, setAnswersSaved] = useState(false);
 
   const {
     eyeContact,
@@ -117,12 +116,6 @@ export default function LiveInterview() {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const getPerformanceLabel = (score) => {
-    if (score >= 8) return "Excellent";
-    if (score >= 6) return "Good";
-    return "Needs Improvement";
-  };
-
   const countFillerWords = (text) => {
     const fillerWords = ["um", "uh", "like", "actually", "basically", "literally", "you know", "sort of", "kind of"];
     const lowerText = text.toLowerCase();
@@ -135,18 +128,24 @@ export default function LiveInterview() {
     return count;
   };
 
-  // Save interview to database - SINGLE ANSWER SAVE
-  const saveSingleAnswerToHistory = async (answerData) => {
+  // Save all answers to database at once
+  const saveAllAnswersToHistory = async () => {
+    if (answersSaved) return;
+    
     try {
       const userInfo = JSON.parse(localStorage.getItem("userInfo"));
       const token = userInfo?.token;
       
       if (!token) {
         console.log("No token found, skipping save");
-        return;
+        return false;
       }
       
-      console.log("Saving answer to history...", answerData);
+      const totalScore = allAnswers.reduce((sum, ans) => sum + ans.score, 0);
+      const avgScore = Math.round(totalScore / allAnswers.length);
+      const passed = avgScore >= 60;
+      const allStrengths = allAnswers.flatMap(a => a.strengths || []);
+      const allImprovements = allAnswers.flatMap(a => a.improvements || []);
       
       const response = await fetch("http://localhost:3000/api/auth/interview/save", {
         method: "POST",
@@ -156,29 +155,76 @@ export default function LiveInterview() {
         },
         body: JSON.stringify({
           role: role?.replace(/%20/g, " "),
-          score: answerData.score,
+          score: avgScore,
           duration: sessionStats.duration,
-          passed: answerData.score >= 60,
-          answers: [answerData],
+          passed: passed,
+          answers: allAnswers,
           feedback: {
-            strengths: answerData.strengths || [],
-            improvements: answerData.improvements || [],
+            strengths: [...new Set(allStrengths)].slice(0, 5),
+            improvements: [...new Set(allImprovements)].slice(0, 5),
           },
         }),
       });
       
       if (response.ok) {
-        const data = await response.json();
-        console.log("✅ Answer saved to history", data);
+        console.log("✅ All answers saved to history");
+        setAnswersSaved(true);
         return true;
-      } else {
-        console.error("Failed to save answer:", await response.text());
-        return false;
       }
+      return false;
     } catch (error) {
-      console.error("Error saving answer:", error);
+      console.error("Error saving answers:", error);
       return false;
     }
+  };
+
+  // Submit all answers and navigate to feedback
+  const submitAllAnswers = async () => {
+    if (allAnswers.length === 0 || allAnswers.length !== total) {
+      alert("Please answer all questions before submitting");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    const saved = await saveAllAnswersToHistory();
+    
+    if (saved) {
+      const totalScore = allAnswers.reduce((sum, ans) => sum + ans.score, 0);
+      const avgScore = Math.round(totalScore / allAnswers.length);
+      const passed = avgScore >= 60;
+      const allStrengths = allAnswers.flatMap(a => a.strengths || []);
+      const allImprovements = allAnswers.flatMap(a => a.improvements || []);
+      
+      navigate("/feedback", {
+        state: {
+          date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+          duration: formatTime(sessionStats.duration),
+          topic: role,
+          score: avgScore,
+          relevance: 85,
+          fluency: 75,
+          structure: 80,
+          fillerWords: sessionStats.fillerWords,
+          strengths: [...new Set(allStrengths)].slice(0, 5),
+          improvements: [...new Set(allImprovements)].slice(0, 5),
+          questions: allAnswers.map(ans => ({
+            question: ans.question,
+            answer: ans.userAnswer,
+            score: ans.score,
+            matchedKeywords: ans.matchedKeywords,
+            missingKeywords: ans.missingKeywords,
+            timestamp: ans.timestamp,
+          })),
+          allAnswers: allAnswers,
+          passed: passed,
+        },
+      });
+    } else {
+      alert("Error saving interview results. Please try again.");
+    }
+    
+    setIsSubmitting(false);
   };
 
   // Start Camera
@@ -264,7 +310,7 @@ export default function LiveInterview() {
     setSessionStats((prev) => ({ ...prev, wordsSpoken: words, fillerWords: fillerCount }));
   }, [transcript]);
 
-  // Speech Recognition with Groq Correction
+  // Speech Recognition
   const startListening = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -365,19 +411,12 @@ export default function LiveInterview() {
     }
   };
 
-  // End Session
-  const endSession = () => {
-    stopCamera();
-    if (recognitionRef.current) recognitionRef.current.stop();
-    setListening(false);
-    setIsSessionActive(false);
-    setCameraEnabled(false);
-    setTimeout(() => navigate("/interviewlibrary"), 1500);
-  };
-
-  // Submit Answer and Save to History Immediately
-  const submitAnswer = async () => {
-    if (!question || !transcript.trim()) return;
+  // Save current answer (store in state, not in DB yet)
+  const saveCurrentAnswer = async () => {
+    if (!question || !transcript.trim()) {
+      alert("Please provide an answer before saving");
+      return;
+    }
 
     const cleanTranscript = transcript.replace(/\s*\[.*?\]\s*/g, "").replace(/\s*groq\.\.\.\s*/g, "");
     setLoading(true);
@@ -393,12 +432,8 @@ export default function LiveInterview() {
       const result = await evaluateAnswerAPI(cleanTranscript, question.ideal_answer, keywords);
 
       const finalScore = result.final_score * 10;
-      const relevanceScore = result.semantic_similarity || 85;
-      const fluencyScore = Math.max(0, Math.min(100, 100 - sessionStats.fillerWords * 2));
-      const structureScore = result.final_score * 10;
       const questionTimestamp = Math.max(0, sessionStats.duration - 45);
       
-      // Prepare answer data for saving
       const answerData = {
         question: question.question,
         userAnswer: cleanTranscript,
@@ -406,40 +441,32 @@ export default function LiveInterview() {
         matchedKeywords: result.matched_keywords || [],
         missingKeywords: result.missing_keywords || [],
         timestamp: formatTime(questionTimestamp),
-        strengths: result.strengths || ["Good understanding of the technical concept", "Clear communication of key ideas"],
-        improvements: result.improvements || ["Add more specific examples", "Quantify your results"],
+        strengths: result.strengths || [],
+        improvements: result.improvements || [],
       };
       
-      // SAVE IMMEDIATELY to database
-      await saveSingleAnswerToHistory(answerData);
-      
-      // Update local state (optional - for any local tracking)
-      setCurrentAnswers(prev => [...prev, answerData]);
-      if (result.strengths) {
-        setCurrentStrengths(prev => [...prev, ...result.strengths]);
-      }
-      if (result.improvements) {
-        setCurrentImprovements(prev => [...prev, ...result.improvements]);
-      }
-      
-      console.log("Answer submitted and saved. Score:", finalScore);
-
-      // Navigate to feedback page
-      navigate("/feedback", {
-        state: {
-          date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
-          duration: formatTime(sessionStats.duration),
-          topic: role,
-          score: finalScore,
-          relevance: relevanceScore,
-          fluency: fluencyScore,
-          structure: structureScore,
-          fillerWords: sessionStats.fillerWords,
-          strengths: result.strengths || ["Good understanding of the technical concept", "Clear communication of key ideas"],
-          improvements: result.improvements || ["Add more specific examples", "Quantify your results"],
-          questions: [{ question: question.question, answer: cleanTranscript, timestamp: formatTime(questionTimestamp) }],
-        },
+      setAllAnswers(prev => {
+        const newAnswers = [...prev];
+        newAnswers[index] = answerData;
+        return newAnswers;
       });
+      
+      console.log(`Answer ${index + 1}/${total} saved. Score: ${finalScore}`);
+      
+      // Clear transcript for next question
+      setTranscript("");
+      setFeedback(null);
+      setPendingCorrection(null);
+      setInterimTranscript("");
+      
+      // Move to next question
+      if (index + 1 < total) {
+        nextQuestion();
+      } else {
+        // All questions answered, show review mode
+        setIsReviewMode(true);
+      }
+      
     } catch (err) {
       console.error("Evaluation failed:", err);
       alert("Error evaluating answer. Please try again.");
@@ -448,14 +475,13 @@ export default function LiveInterview() {
     }
   };
 
-  // Handle Next Question (just go to next, no save needed - already saved)
-  const handleNextQuestion = () => {
-    stopListening();
-    setTranscript("");
-    setFeedback(null);
-    setPendingCorrection(null);
-    setInterimTranscript("");
-    nextQuestion();
+  const endSession = () => {
+    stopCamera();
+    if (recognitionRef.current) recognitionRef.current.stop();
+    setListening(false);
+    setIsSessionActive(false);
+    setCameraEnabled(false);
+    setTimeout(() => navigate("/interviewlibrary"), 1500);
   };
 
   // Loading States
@@ -512,7 +538,87 @@ export default function LiveInterview() {
     );
   }
 
-  // Main UI
+  // Review Mode - Show summary of all answers
+  if (isReviewMode) {
+    const answeredCount = allAnswers.filter(a => a).length;
+    const totalScore = allAnswers.reduce((sum, ans) => sum + (ans?.score || 0), 0);
+    const avgScore = Math.round(totalScore / answeredCount);
+    const passed = avgScore >= 60;
+    
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
+        <Navbar />
+        <div className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 py-8 mt-24">
+          <div className="bg-white rounded-2xl shadow-lg border p-8">
+            <div className="text-center mb-8">
+              <h1 className="text-2xl font-bold text-gray-900">Interview Complete!</h1>
+              <p className="text-gray-500 mt-2">Review your answers before submitting</p>
+            </div>
+            
+            <div className="bg-gray-50 rounded-xl p-4 mb-6">
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <p className="text-2xl font-bold text-blue-600">{answeredCount}/{total}</p>
+                  <p className="text-xs text-gray-500">Questions Answered</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-green-600">{avgScore}%</p>
+                  <p className="text-xs text-gray-500">Average Score</p>
+                </div>
+                <div>
+                  <p className={`text-2xl font-bold ${passed ? 'text-green-600' : 'text-red-600'}`}>
+                    {passed ? "Pass" : "Fail"}
+                  </p>
+                  <p className="text-xs text-gray-500">Status</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-4 mb-8 max-h-96 overflow-y-auto">
+              {allAnswers.map((answer, idx) => (
+                <div key={idx} className="border border-gray-200 rounded-xl p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-semibold text-gray-800">Question {idx + 1}</h3>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${answer.score >= 70 ? 'bg-green-100 text-green-700' : answer.score >= 50 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
+                      Score: {answer.score}/100
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-2">{answer.question}</p>
+                  <details className="text-sm">
+                    <summary className="cursor-pointer text-blue-600">View Your Answer</summary>
+                    <p className="mt-2 p-3 bg-gray-50 rounded-lg text-gray-700">{answer.userAnswer}</p>
+                  </details>
+                </div>
+              ))}
+            </div>
+            
+            <div className="flex gap-4">
+              <button
+                onClick={() => setIsReviewMode(false)}
+                className="flex-1 px-6 py-3 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition"
+              >
+                Back to Questions
+              </button>
+              <button
+                onClick={submitAllAnswers}
+                disabled={isSubmitting || answeredCount !== total}
+                className={`flex-1 px-6 py-3 rounded-xl text-white font-semibold transition ${
+                  answeredCount === total
+                    ? "bg-gradient-to-r from-green-600 to-emerald-600 hover:shadow-lg"
+                    : "bg-gray-400 cursor-not-allowed"
+                }`}
+              >
+                {isSubmitting ? "Submitting..." : "Submit All Answers"}
+              </button>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Main Interview UI
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
       <Navbar />
@@ -534,7 +640,9 @@ export default function LiveInterview() {
           </div>
 
           <div className="flex items-center gap-4 w-full sm:w-auto">
-            <span className="text-sm text-slate-500 whitespace-nowrap">Q{index + 1}/{total}</span>
+            <span className="text-sm text-slate-500 whitespace-nowrap">
+              Q{index + 1}/{total}
+            </span>
             <div className="flex-1 sm:w-48 bg-slate-100 rounded-full h-2">
               <div className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full" style={{ width: `${total ? ((index + 1) / total) * 100 : 0}%` }} />
             </div>
@@ -632,6 +740,11 @@ export default function LiveInterview() {
                     <span key={i} className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full">#{keyword.trim()}</span>
                   ))}
                 </div>
+                {allAnswers[index] && (
+                  <div className="mt-3 p-2 bg-green-50 rounded-lg text-xs text-green-700">
+                    ✓ You've answered this question. You can review and change your answer.
+                  </div>
+                )}
               </div>
             )}
 
@@ -653,6 +766,11 @@ export default function LiveInterview() {
                     <span className="flex items-center gap-1.5 text-blue-600 text-xs bg-blue-50 px-2 py-1 rounded-full">
                       <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-spin"></div>
                       AI Correcting...
+                    </span>
+                  )}
+                  {allAnswers[index] && (
+                    <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                      Saved
                     </span>
                   )}
                 </div>
@@ -694,100 +812,24 @@ export default function LiveInterview() {
               </div>
 
               <div className="mt-3 p-2 bg-blue-50 rounded-lg text-xs text-blue-600 text-center">
-                💡 Speaking clearly improves accuracy. AI automatically corrects technical terms like "froent" → "frontend"
+                💡 Speak clearly. AI corrects technical terms like "froent" → "frontend"
               </div>
             </div>
 
-            {/* Feedback Section */}
-            {loading && (
-              <div className="bg-blue-50 rounded-xl p-5 border">
-                <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                  <p className="text-blue-700 text-sm">Evaluating your answer...</p>
-                </div>
-              </div>
-            )}
-
-            {feedback && (
-              <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-lg border">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-purple-500 rounded-full"></span>
-                    <span className="text-xs font-medium text-purple-600">FEEDBACK</span>
-                  </div>
-                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                    feedback.final_score >= 8 ? "bg-emerald-100 text-emerald-700" :
-                    feedback.final_score >= 6 ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700"
-                  }`}>
-                    {getPerformanceLabel(feedback.final_score)}
-                  </span>
-                </div>
-
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm text-slate-600">Score</span>
-                    <span className="text-2xl font-bold text-slate-800">{feedback.final_score}/10</span>
-                  </div>
-                  <div className="w-full bg-slate-100 rounded-full h-2">
-                    <div className={`h-2 rounded-full ${feedback.final_score >= 8 ? "bg-emerald-500" : feedback.final_score >= 6 ? "bg-blue-500" : "bg-amber-500"}`} style={{ width: `${feedback.final_score * 10}%` }} />
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  {feedback.matched_keywords?.length > 0 && (
-                    <div>
-                      <p className="text-xs font-medium text-emerald-600 mb-1">✓ Key Terms Found</p>
-                      <div className="flex flex-wrap gap-1">
-                        {feedback.matched_keywords.map((k, i) => (
-                          <span key={i} className="text-xs bg-emerald-50 text-emerald-700 px-2 py-1 rounded-full">{k}</span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {feedback.missing_keywords?.length > 0 && (
-                    <div>
-                      <p className="text-xs font-medium text-amber-600 mb-1">⚠️ Consider Adding</p>
-                      <div className="flex flex-wrap gap-1">
-                        {feedback.missing_keywords.map((k, i) => (
-                          <span key={i} className="text-xs bg-amber-50 text-amber-700 px-2 py-1 rounded-full">{k}</span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Action Buttons */}
+            {/* Save Answer Button */}
             <div className="flex gap-3">
               <button
-                disabled={!isSessionActive || loading}
-                onClick={() => {
-                  if (recognitionRef.current) recognitionRef.current.stop();
-                  setTranscript("");
-                  setFeedback(null);
-                  setListening(false);
-                  setPendingCorrection(null);
-                  setInterimTranscript("");
-                }}
-                className="flex-1 px-4 py-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-sm font-medium disabled:opacity-50"
-              >
-                Reset
-              </button>
-              <button
                 disabled={!isSessionActive || loading || !transcript.trim()}
-                onClick={() => { stopListening(); submitAnswer(); }}
+                onClick={() => { stopListening(); saveCurrentAnswer(); }}
                 className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-cyan-500 hover:to-blue-500 text-white text-sm font-medium disabled:opacity-50"
               >
-                Submit
+                {loading ? "Evaluating..." : allAnswers[index] ? "Update Answer" : "Save & Next"}
               </button>
-              <button
-                onClick={handleNextQuestion}
-                disabled={!isSessionActive || loading}
-                className="flex-1 px-4 py-3 rounded-xl bg-slate-700 hover:bg-slate-800 text-white text-sm font-medium disabled:opacity-50"
-              >
-                Next
-              </button>
+            </div>
+
+            {/* Progress indicator */}
+            <div className="text-center text-sm text-slate-500">
+              Answered: {allAnswers.filter(a => a).length} of {total} questions
             </div>
           </div>
         </div>
