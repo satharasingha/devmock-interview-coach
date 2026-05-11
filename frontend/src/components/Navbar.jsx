@@ -32,11 +32,14 @@ export default function Navbar() {
     <nav className="w-full fixed top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
 
-        {/* ================= LOGO ================= */}
+        {/* ================= LOGO WITH IMAGE ================= */}
         <Link to="/" className="flex items-center gap-2 sm:gap-3 group">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-lg flex items-center justify-center text-white font-bold shadow-md group-hover:scale-105 transition-transform duration-300">
-            &lt;/&gt;
-          </div>
+          {/* Logo Image from public folder */}
+          <img 
+            src="/logo.png" 
+            alt="DevMock Logo" 
+            className="w-8 h-8 sm:w-9 sm:h-9 object-contain rounded-md group-hover:scale-105 transition-transform duration-300"
+          />
           <span className="font-semibold text-base sm:text-lg bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-600">
             DevMock
           </span>

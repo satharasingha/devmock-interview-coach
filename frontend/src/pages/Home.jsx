@@ -1,8 +1,8 @@
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import StanfordLogo from "../assets/stanford-logo.png";
-import MITLogo from "../assets/mit-logo.png";
-import BerkeleyLogo from "../assets/berkeley-logo.jpg";
+import StanfordLogo from "../assets/plymouth.png";
+import MITLogo from "../assets/oxford.png";
+import BerkeleyLogo from "../assets/ber.png";
 import CambridgeLogo from "../assets/cambridge-logo.png";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
@@ -96,10 +96,10 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
             {/* Centered content */}
             <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
-              {/* Badge */}
+              {/* Badge - with blinking animation */}
               <div className="flex justify-center mb-6 md:mb-8">
                 <div className="relative group">
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full blur opacity-60 group-hover:opacity-80 transition duration-200"></div>
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full blur opacity-60 group-hover:opacity-80 transition duration-200 animate-pulse"></div>
                   <span className="relative text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-cyan-600 px-4 sm:px-6 py-2 sm:py-2.5 rounded-full inline-block whitespace-nowrap">
                     ✦ NEW: AI MENTOR ENGINE v2.0
                   </span>
@@ -213,7 +213,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* TRUSTED BY SECTION - Dark Theme */}
+        {/* TRUSTED BY SECTION - Dark Theme - UNIFORM LOGO SIZES */}
         <section className="pb-16 md:pb-20 lg:pb-24">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="relative group">
@@ -229,20 +229,21 @@ export default function Home() {
                   </h3>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 md:gap-10">
                   {[
-                    { logo: StanfordLogo, name: "Stanford" },
-                    { logo: MITLogo, name: "MIT" },
+                    { logo: StanfordLogo, name: "Plymouth" },
+                    { logo: MITLogo, name: "Oxford" },
                     { logo: BerkeleyLogo, name: "Berkeley" },
                     { logo: CambridgeLogo, name: "Cambridge" }
                   ].map((university, index) => (
-                    <div key={index} className="flex items-center gap-2 sm:gap-3 hover:scale-105 transition-transform duration-300">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-gray-700/50 rounded-lg sm:rounded-xl flex items-center justify-center p-1.5 sm:p-2">
+                    <div key={index} className="flex flex-col items-center gap-2 hover:scale-105 transition-transform duration-300">
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-white/5 rounded-xl flex items-center justify-center p-2">
                         <img 
                           src={university.logo} 
                           alt={university.name} 
-                          className="max-h-5 sm:max-h-6 md:max-h-8 max-w-5 sm:max-w-6 md:max-w-8 object-contain brightness-0 invert opacity-80 hover:opacity-100 transition-opacity"
+                          className="w-full h-full object-contain"
                           onError={(e) => {
+                            console.error(`Failed to load logo: ${university.name}`);
                             e.target.style.display = 'none';
                           }}
                         />
