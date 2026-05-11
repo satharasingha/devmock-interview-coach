@@ -25,7 +25,7 @@ import {
   Menu,
   X,
   Eye,
-  RefreshCw, 
+  RefreshCw,
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -41,7 +41,6 @@ export default function AdminDashboard() {
   });
   
   const [recentInterviews, setRecentInterviews] = useState([]);
-  const [totalInterviewsCount, setTotalInterviewsCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [questions, setQuestions] = useState([]);
@@ -70,7 +69,7 @@ export default function AdminDashboard() {
       const questionsData = await questionsResponse.json();
       setQuestions(questionsData);
       
-      // 2. Fetch users (students only)
+      // 2. Fetch users
       const usersResponse = await fetch('http://localhost:3000/api/auth/users', {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -78,6 +77,7 @@ export default function AdminDashboard() {
       if (usersResponse.ok) {
         const usersResult = await usersResponse.json();
         usersData = usersResult.users || usersResult || [];
+        console.log("Users data:", usersData);
       }
       setUsers(usersData);
       
@@ -89,6 +89,7 @@ export default function AdminDashboard() {
       if (interviewsResponse.ok) {
         const interviewsResult = await interviewsResponse.json();
         interviewsData = interviewsResult.interviews || [];
+        console.log("Interviews data:", interviewsData);
       }
       setInterviews(interviewsData);
       
@@ -105,7 +106,10 @@ export default function AdminDashboard() {
       
       // Active sessions (interviews in last 30 minutes)
       const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-      const activeSessions = interviewsData.filter(i => new Date(i.createdAt) > thirtyMinutesAgo).length;
+      const activeSessions = interviewsData.filter(i => {
+        if (!i.createdAt) return false;
+        return new Date(i.createdAt) > thirtyMinutesAgo;
+      }).length;
       
       setMetrics({
         totalStudents,
@@ -116,24 +120,23 @@ export default function AdminDashboard() {
       
       // Format recent interviews for table
       const formattedInterviews = interviewsData.slice(0, 20).map(interview => {
-        // Get student name from users data
+        // Find student by matching userId with _id
         const student = usersData.find(u => u._id === interview.userId);
-        // Calculate pass/fail based on score
         const passed = (interview.score || 0) >= 60;
         
         return {
           id: interview._id,
           name: student?.fullName || "Unknown Student",
+          email: student?.email || "",
           topic: interview.role || "Unknown Role",
           score: interview.score || 0,
           status: passed ? "Passed" : "Failed",
-          date: interview.createdAt ? new Date(interview.createdAt).toLocaleString() : "Unknown",
+          date: interview.createdAt || new Date().toISOString(),
           duration: interview.duration || 0,
         };
       });
       
       setRecentInterviews(formattedInterviews);
-      setTotalInterviewsCount(formattedInterviews.length);
       
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
@@ -146,10 +149,10 @@ export default function AdminDashboard() {
   const getSkillProficiency = () => {
     if (!questions.length) {
       return [
-        { name: "Algorithms", percentage: 65 },
-        { name: "System Design", percentage: 58 },
-        { name: "Behavioral", percentage: 72 },
-        { name: "Databases", percentage: 60 },
+        { name: "Algorithms", percentage: 0 },
+        { name: "System Design", percentage: 0 },
+        { name: "Behavioral", percentage: 0 },
+        { name: "Databases", percentage: 0 },
       ];
     }
     
@@ -161,26 +164,26 @@ export default function AdminDashboard() {
     };
     
     questions.forEach(q => {
-      const text = (q.question + " " + q.category).toLowerCase();
-      if (text.includes("algorithm") || text.includes("sort") || text.includes("search")) {
+      const text = (q.question + " " + (q.category || "")).toLowerCase();
+      if (text.includes("algorithm") || text.includes("sort") || text.includes("search") || text.includes("data structure")) {
         skills["Algorithms"].total++;
         if (q.difficulty === "Easy") skills["Algorithms"].count += 70;
         else if (q.difficulty === "Medium") skills["Algorithms"].count += 50;
         else skills["Algorithms"].count += 30;
       }
-      if (text.includes("system") || text.includes("design") || text.includes("architect")) {
+      if (text.includes("system") || text.includes("design") || text.includes("architect") || text.includes("scalability")) {
         skills["System Design"].total++;
         if (q.difficulty === "Easy") skills["System Design"].count += 70;
         else if (q.difficulty === "Medium") skills["System Design"].count += 50;
         else skills["System Design"].count += 30;
       }
-      if (text.includes("behavioral") || text.includes("soft skill")) {
+      if (text.includes("behavioral") || text.includes("soft skill") || text.includes("teamwork") || text.includes("leadership")) {
         skills["Behavioral"].total++;
         if (q.difficulty === "Easy") skills["Behavioral"].count += 70;
         else if (q.difficulty === "Medium") skills["Behavioral"].count += 50;
         else skills["Behavioral"].count += 30;
       }
-      if (text.includes("database") || text.includes("sql") || text.includes("mongodb")) {
+      if (text.includes("database") || text.includes("sql") || text.includes("mongodb") || text.includes("query")) {
         skills["Databases"].total++;
         if (q.difficulty === "Easy") skills["Databases"].count += 70;
         else if (q.difficulty === "Medium") skills["Databases"].count += 50;
@@ -189,10 +192,10 @@ export default function AdminDashboard() {
     });
     
     return [
-      { name: "Algorithms", percentage: Math.min(100, Math.round((skills["Algorithms"].count / (skills["Algorithms"].total || 1)) * 100)) || 65 },
-      { name: "System Design", percentage: Math.min(100, Math.round((skills["System Design"].count / (skills["System Design"].total || 1)) * 100)) || 58 },
-      { name: "Behavioral", percentage: Math.min(100, Math.round((skills["Behavioral"].count / (skills["Behavioral"].total || 1)) * 100)) || 72 },
-      { name: "Databases", percentage: Math.min(100, Math.round((skills["Databases"].count / (skills["Databases"].total || 1)) * 100)) || 60 },
+      { name: "Algorithms", percentage: Math.min(100, Math.round((skills["Algorithms"].count / (skills["Algorithms"].total || 1)) * 100)) || 45 },
+      { name: "System Design", percentage: Math.min(100, Math.round((skills["System Design"].count / (skills["System Design"].total || 1)) * 100)) || 42 },
+      { name: "Behavioral", percentage: Math.min(100, Math.round((skills["Behavioral"].count / (skills["Behavioral"].total || 1)) * 100)) || 58 },
+      { name: "Databases", percentage: Math.min(100, Math.round((skills["Databases"].count / (skills["Databases"].total || 1)) * 100)) || 48 },
     ];
   };
 
@@ -207,6 +210,7 @@ export default function AdminDashboard() {
       const dateStr = date.toISOString().split('T')[0];
       
       const count = interviews.filter(i => {
+        if (!i.createdAt) return false;
         const interviewDate = new Date(i.createdAt).toISOString().split('T')[0];
         return interviewDate === dateStr;
       }).length;
@@ -214,11 +218,7 @@ export default function AdminDashboard() {
       last30Days.push(count);
     }
     
-    // If no data, generate sample trend
-    if (last30Days.every(v => v === 0)) {
-      return [45, 52, 48, 61, 58, 65, 70, 68, 72, 75, 78, 80, 82, 85, 88, 90, 87, 92, 95, 98, 100, 102, 105, 108, 110, 112, 115, 118, 120, 125];
-    }
-    
+    // If no data, return zeros
     return last30Days;
   };
 
@@ -229,7 +229,8 @@ export default function AdminDashboard() {
   // Filter recent interviews based on search
   const filteredInterviews = recentInterviews.filter(interview =>
     interview.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    interview.topic.toLowerCase().includes(searchTerm.toLowerCase())
+    interview.topic.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (interview.email && interview.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   // Pagination
@@ -243,12 +244,6 @@ export default function AdminDashboard() {
     if (changeType === "up") return <ArrowUp className="w-4 h-4 text-green-600" />;
     if (changeType === "down") return <ArrowDown className="w-4 h-4 text-red-600" />;
     return <Minus className="w-4 h-4 text-gray-600" />;
-  };
-
-  const getChangeColor = (changeType) => {
-    if (changeType === "up") return "text-green-600";
-    if (changeType === "down") return "text-red-600";
-    return "text-gray-600";
   };
 
   if (loading) {
@@ -367,7 +362,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="flex gap-2">
                   <button className="text-xs px-3 py-1 bg-green-100 text-green-700 rounded-lg font-medium">
-                    +{Math.floor((interviewVolumeData[interviewVolumeData.length - 1] / (interviewVolumeData[0] || 1) - 1) * 100)}% Growth
+                    {metrics.totalInterviews > 0 ? `${Math.floor((interviewVolumeData[interviewVolumeData.length - 1] / (interviewVolumeData[0] || 1)) * 100)}%` : "0%"} Growth
                   </button>
                   <button className="p-1 hover:bg-gray-100 rounded">
                     <MoreVertical size={16} />
@@ -435,7 +430,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Recent Interviews Table */}
+          {/* Recent Interviews Table - Action Button Removed */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between flex-wrap gap-4">
@@ -474,11 +469,11 @@ export default function AdminDashboard() {
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Student Name</th>
+                    <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
                     <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Topic</th>
                     <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Score</th>
                     <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
                     <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
-                    <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -493,6 +488,7 @@ export default function AdminDashboard() {
                             <span className="font-medium text-gray-900">{interview.name}</span>
                           </div>
                         </td>
+                        <td className="px-6 py-4 text-gray-500 text-sm">{interview.email || "—"}</td>
                         <td className="px-6 py-4">
                           <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">{interview.topic}</span>
                         </td>
@@ -502,18 +498,16 @@ export default function AdminDashboard() {
                           </span>
                         </td>
                         <td className="px-6 py-4">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${interview.status === "Passed" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            interview.status === "Passed" 
+                              ? "bg-green-100 text-green-700" 
+                              : "bg-red-100 text-red-700"
+                          }`}>
                             {interview.status}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-gray-500 text-sm">
                           {new Date(interview.date).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4">
-                          <button className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">
-                            <Eye size={14} />
-                            View
-                          </button>
                         </td>
                       </tr>
                     ))
