@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-// Import only icons that definitely exist in lucide-react
+// Using ONLY verified icons that exist in lucide-react
 import {
   BookOpen,
   Code,
@@ -22,18 +22,18 @@ import {
   Lightbulb,
   Target,
   TrendingUp,
-  CheckSquare,
   Calendar,
   Mail,
   UserPlus,
   PlayCircle,
   FileCheck,
   Sparkles,
-  // Note: Use "Github" not "GitHub" (lowercase 'h' only)
+  Globe,
+  Bookmark,
+  Headphones,
+  Shield,
+  Zap,
 } from "lucide-react";
-
-// Import Github separately with correct name
-import { Github } from "lucide-react";
 
 export default function Resources() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -233,7 +233,7 @@ export default function Resources() {
       description: "Complete guide to version control, branching strategies, and collaboration best practices.",
       category: "tools",
       type: "Guide",
-      icon: Github,
+      icon: Code,
       link: "#",
       external: false,
       readTime: "20 min read",
@@ -291,6 +291,19 @@ export default function Resources() {
       link: "#",
       external: false,
       readTime: "5 min read",
+      difficulty: "Beginner",
+      featured: false,
+    },
+    {
+      id: 19,
+      title: "Stack Overflow Community",
+      description: "Join the largest developer community for Q&A and knowledge sharing.",
+      category: "community",
+      type: "Link",
+      icon: Globe,
+      link: "#",
+      external: true,
+      platform: "Stack Overflow",
       difficulty: "Beginner",
       featured: false,
     },
