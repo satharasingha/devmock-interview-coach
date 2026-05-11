@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-// Using ONLY verified icons that exist in lucide-react
+// Using ONLY the most basic, guaranteed icons from lucide-react
 import {
   BookOpen,
   Code,
@@ -9,30 +9,23 @@ import {
   Wrench,
   Users,
   FileText,
-  Youtube,
   Link,
   Download,
   ExternalLink,
   Search,
-  Star,
   Clock,
   Award,
   ChevronRight,
   GraduationCap,
-  Lightbulb,
   Target,
-  TrendingUp,
   Calendar,
   Mail,
-  UserPlus,
-  PlayCircle,
+  Play,
   FileCheck,
   Sparkles,
   Globe,
-  Bookmark,
-  Headphones,
-  Shield,
-  Zap,
+  Star,
+  TrendingUp,
 } from "lucide-react";
 
 export default function Resources() {
@@ -110,7 +103,7 @@ export default function Resources() {
       description: "Free YouTube playlist covering React from basics to advanced concepts with projects.",
       category: "learning",
       type: "Video",
-      icon: Youtube,
+      icon: Play,
       link: "https://youtube.com",
       external: true,
       platform: "YouTube",
@@ -124,7 +117,7 @@ export default function Resources() {
       description: "Comprehensive course on building backend APIs with Node.js, Express, and MongoDB.",
       category: "learning",
       type: "Course",
-      icon: PlayCircle,
+      icon: Play,
       link: "https://coursera.org",
       external: true,
       platform: "Coursera",
@@ -179,7 +172,7 @@ export default function Resources() {
       description: "How to optimize your LinkedIn profile to attract recruiters and showcase your skills.",
       category: "career",
       type: "Guide",
-      icon: UserPlus,
+      icon: Briefcase,
       link: "#",
       external: false,
       readTime: "15 min read",
