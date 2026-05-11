@@ -87,7 +87,7 @@ export default function LiveInterview() {
   const [isCorrecting, setIsCorrecting] = useState(false);
   const [pendingCorrection, setPendingCorrection] = useState(null);
   
-  // Store ALL answers for the session (submitted at the end)
+  // Store ALL answers for the session
   const [allAnswers, setAllAnswers] = useState([]);
   const [isReviewMode, setIsReviewMode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -203,19 +203,11 @@ export default function LiveInterview() {
           topic: role,
           score: avgScore,
           relevance: 85,
-          fluency: 75,
-          structure: 80,
+          fluency: Math.max(0, Math.min(100, 100 - sessionStats.fillerWords * 2)),
+          structure: 75,
           fillerWords: sessionStats.fillerWords,
           strengths: [...new Set(allStrengths)].slice(0, 5),
           improvements: [...new Set(allImprovements)].slice(0, 5),
-          questions: allAnswers.map(ans => ({
-            question: ans.question,
-            answer: ans.userAnswer,
-            score: ans.score,
-            matchedKeywords: ans.matchedKeywords,
-            missingKeywords: ans.missingKeywords,
-            timestamp: ans.timestamp,
-          })),
           allAnswers: allAnswers,
           passed: passed,
         },
@@ -455,7 +447,6 @@ export default function LiveInterview() {
       
       // Clear transcript for next question
       setTranscript("");
-      setFeedback(null);
       setPendingCorrection(null);
       setInterimTranscript("");
       
@@ -542,15 +533,15 @@ export default function LiveInterview() {
   if (isReviewMode) {
     const answeredCount = allAnswers.filter(a => a).length;
     const totalScore = allAnswers.reduce((sum, ans) => sum + (ans?.score || 0), 0);
-    const avgScore = Math.round(totalScore / answeredCount);
+    const avgScore = answeredCount > 0 ? Math.round(totalScore / answeredCount) : 0;
     const passed = avgScore >= 60;
     
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
         <Navbar />
         <div className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 py-8 mt-24">
-          <div className="bg-white rounded-2xl shadow-lg border p-8">
-            <div className="text-center mb-8">
+          <div className="bg-white rounded-2xl shadow-lg border p-6 sm:p-8">
+            <div className="text-center mb-6 sm:mb-8">
               <h1 className="text-2xl font-bold text-gray-900">Interview Complete!</h1>
               <p className="text-gray-500 mt-2">Review your answers before submitting</p>
             </div>
@@ -559,7 +550,7 @@ export default function LiveInterview() {
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
                   <p className="text-2xl font-bold text-blue-600">{answeredCount}/{total}</p>
-                  <p className="text-xs text-gray-500">Questions Answered</p>
+                  <p className="text-xs text-gray-500">Questions</p>
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-green-600">{avgScore}%</p>
@@ -577,7 +568,7 @@ export default function LiveInterview() {
             <div className="space-y-4 mb-8 max-h-96 overflow-y-auto">
               {allAnswers.map((answer, idx) => (
                 <div key={idx} className="border border-gray-200 rounded-xl p-4">
-                  <div className="flex justify-between items-start mb-2">
+                  <div className="flex justify-between items-start mb-2 flex-wrap gap-2">
                     <h3 className="font-semibold text-gray-800">Question {idx + 1}</h3>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${answer.score >= 70 ? 'bg-green-100 text-green-700' : answer.score >= 50 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
                       Score: {answer.score}/100
@@ -592,7 +583,7 @@ export default function LiveInterview() {
               ))}
             </div>
             
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <button
                 onClick={() => setIsReviewMode(false)}
                 className="flex-1 px-6 py-3 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition"

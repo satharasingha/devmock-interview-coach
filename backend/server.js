@@ -12,11 +12,10 @@ import authRoutes from './src/routes/authRouter.js'
 import contactRoutes from './src/routes/contactRoutes.js';
 import correctionRoutes from './src/routes/correctionRoutes.js';
 // Debug: Check if email credentials are loaded
-console.log('=== ENVIRONMENT VARIABLES CHECK ===');
+
 console.log('EMAIL_USER:', process.env.EMAIL_USER ? '✅ Loaded' : '❌ Missing');
 console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? '✅ Loaded' : '❌ Missing');
-console.log('Gemini API Key:', process.env.GEMINI_API_KEY ? '✅ Loaded' : '❌ Missing');
-console.log('===================================');
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
