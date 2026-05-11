@@ -14,7 +14,7 @@ import ContactUs from "./pages/Contact";
 import ResetPassword from "./pages/ResetPassword";
 import AdminUserManagement from "./pages/admin/AdminUserManagement";
 import Profile from "./pages/UserProfile";
-
+import Resources from "./pages/Resources";
 function App() {
   return (
     <Router>
@@ -28,6 +28,7 @@ function App() {
         <Route path="/contact" element={<ContactUs />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/resources" element={<Resources />} />
         
         {/* Interview Routes */}
         <Route path="/setup/:role" element={<InterviewSetup />} />
