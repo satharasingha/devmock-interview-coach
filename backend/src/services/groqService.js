@@ -51,7 +51,7 @@ export const evaluateWithGroq = async (userAnswer, referenceAnswer, coreKeywords
 
   // PRE-CHECK: Invalid answer detection (I don't know)
   if (isInvalidAnswer(userAnswer)) {
-    console.log("❌ Invalid answer detected (I don't know / not sure), returning low score");
+    console.log("Invalid answer detected (I don't know / not sure), returning low score");
     return {
       final_score: 1,
       semantic_similarity: 10,

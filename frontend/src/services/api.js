@@ -10,7 +10,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
  */
 export const evaluateAnswerAPI = async (userAnswer, referenceAnswer, coreKeywords) => {
   try {
-    console.log("📡 Calling backend API for evaluation...");
+    console.log("Calling backend API for evaluation...");
     
     const response = await fetch(`${API_BASE_URL}/evaluate`, {
       method: 'POST',
@@ -35,11 +35,11 @@ export const evaluateAnswerAPI = async (userAnswer, referenceAnswer, coreKeyword
       throw new Error(result.error || 'Evaluation failed');
     }
     
-    console.log(`✅ Evaluation complete (${result.meta?.evaluation_method || 'unknown'}) - Score: ${result.data?.final_score}/10`);
+    console.log(`Evaluation complete (${result.meta?.evaluation_method || 'unknown'}) - Score: ${result.data?.final_score}/10`);
     return result.data;
     
   } catch (error) {
-    console.error('❌ API call failed:', error);
+    console.error('API call failed:', error);
     throw error;
   }
 };
