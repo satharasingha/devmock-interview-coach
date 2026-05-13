@@ -1,7 +1,5 @@
-import dotenv from 'dotenv';
-// Load environment variables FIRST
+import dotenv from "dotenv";
 dotenv.config();
-
 import User from "../models/User.js";
 import Interview from "../models/Interview.js";
 import jwt from "jsonwebtoken";
@@ -9,36 +7,39 @@ import crypto from "crypto";
 import nodemailer from "nodemailer";
 
 // Debug
-console.log('UserController - EMAIL_USER:', process.env.EMAIL_USER ? '✅' : '❌');
+console.log(
+  "UserController - EMAIL_USER:",
+  process.env.EMAIL_USER ? "Finded" : "Not Finded",
+);
 
 const generateToken = (user) => {
   return jwt.sign(
     { id: user._id, email: user.email, isAdmin: user.isAdmin },
-    process.env.JWT_SECRET || "your_secret_key_here",
-    { expiresIn: "7d" }
+    process.env.JWT_SECRET || "secret_key",
+    { expiresIn: "7d" },
   );
 };
 
 // Create email transporter with proper configuration
 const createTransporter = () => {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.error('Email credentials missing in .env file');
-    throw new Error('Email credentials not configured');
+    console.error("Email credentials missing in .env file");
+    throw new Error("Email credentials not configured");
   }
 
   return nodemailer.createTransport({
-    service: 'gmail',
+    service: "gmail",
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
     tls: {
-      rejectUnauthorized: false
-    }
+      rejectUnauthorized: false,
+    },
   });
 };
 
-// ==================== AUTHENTICATION ====================
+// AUTHENTICATION
 
 // Register User
 export const registerUser = async (req, res) => {
@@ -48,17 +49,17 @@ export const registerUser = async (req, res) => {
     console.log("Registration attempt:", { fullName, email });
 
     if (!fullName || !email || !password) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        message: "Please provide fullName, email, and password" 
+        message: "Please provide fullName, email, and password",
       });
     }
 
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        message: "User already exists with this email" 
+        message: "User already exists with this email",
       });
     }
 
@@ -89,9 +90,9 @@ export const registerUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Registration error:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: error.message || "Server error during registration" 
+      message: error.message || "Server error during registration",
     });
   }
 };
@@ -104,32 +105,32 @@ export const loginUser = async (req, res) => {
     console.log("Login attempt:", { email });
 
     if (!email || !password) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        message: "Please provide email and password" 
+        message: "Please provide email and password",
       });
     }
 
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
-        message: "Invalid email or password" 
+        message: "Invalid email or password",
       });
     }
 
     if (user.isBlocked) {
-      return res.status(403).json({ 
+      return res.status(403).json({
         success: false,
-        message: "Account has been blocked. Contact support." 
+        message: "Account has been blocked. Contact support.",
       });
     }
 
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
-        message: "Invalid email or password" 
+        message: "Invalid email or password",
       });
     }
 
@@ -151,9 +152,9 @@ export const loginUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: error.message || "Server error during login" 
+      message: error.message || "Server error during login",
     });
   }
 };
@@ -163,9 +164,9 @@ export const getCurrentUser = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
     if (!user) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         success: false,
-        message: "User not found" 
+        message: "User not found",
       });
     }
     res.json({
@@ -174,14 +175,14 @@ export const getCurrentUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Get user error:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: "Server error" 
+      message: "Server error",
     });
   }
 };
 
-// ==================== PASSWORD RESET ====================
+// PASSWORD RESET
 
 // Forgot Password - Send Reset Email
 export const forgotPassword = async (req, res) => {
@@ -196,8 +197,9 @@ export const forgotPassword = async (req, res) => {
 
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
-      return res.status(200).json({ 
-        message: "If your email is registered, you will receive a password reset link." 
+      return res.status(200).json({
+        message:
+          "If your email is registered, you will receive a password reset link.",
       });
     }
 
@@ -236,8 +238,9 @@ export const forgotPassword = async (req, res) => {
     await transporter.sendMail(mailOptions);
     console.log(`Password reset email sent to: ${user.email}`);
 
-    res.status(200).json({ 
-      message: "If your email is registered, you will receive a password reset link." 
+    res.status(200).json({
+      message:
+        "If your email is registered, you will receive a password reset link.",
     });
   } catch (error) {
     console.error("Forgot password error:", error);
@@ -255,7 +258,9 @@ export const verifyResetToken = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(400).json({ message: "Invalid or expired reset token" });
+      return res
+        .status(400)
+        .json({ message: "Invalid or expired reset token" });
     }
 
     res.status(200).json({ message: "Token is valid" });
@@ -277,7 +282,9 @@ export const resetPassword = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(400).json({ message: "Invalid or expired reset token" });
+      return res
+        .status(400)
+        .json({ message: "Invalid or expired reset token" });
     }
 
     user.password = password;
@@ -287,28 +294,32 @@ export const resetPassword = async (req, res) => {
 
     console.log(`Password reset successfully for: ${user.email}`);
 
-    res.status(200).json({ message: "Password has been reset successfully. Please login." });
+    res
+      .status(200)
+      .json({ message: "Password has been reset successfully. Please login." });
   } catch (error) {
     console.error("Reset password error:", error);
     res.status(500).json({ message: "Failed to reset password" });
   }
 };
 
-// ==================== USER PROFILE ====================
+// USER PROFILE
 
 // Get User Profile
 export const getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
     if (!user) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "User not found" 
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
       });
     }
-    
-    const interviewCount = await Interview.countDocuments({ userId: req.user.id });
-    
+
+    const interviewCount = await Interview.countDocuments({
+      userId: req.user.id,
+    });
+
     res.json({
       success: true,
       user: {
@@ -319,7 +330,7 @@ export const getUserProfile = async (req, res) => {
         createdAt: user.createdAt,
         lastLogin: user.lastLogin,
         interviewCount: interviewCount,
-      }
+      },
     });
   } catch (error) {
     console.error("Get profile error:", error);
@@ -331,27 +342,29 @@ export const getUserProfile = async (req, res) => {
 export const updateUserProfile = async (req, res) => {
   try {
     const { fullName, email } = req.body;
-    
+
     if (email && email !== req.user.email) {
       const existingUser = await User.findOne({ email: email.toLowerCase() });
       if (existingUser) {
-        return res.status(400).json({ 
-          success: false, 
-          message: "Email already in use by another account" 
+        return res.status(400).json({
+          success: false,
+          message: "Email already in use by another account",
         });
       }
     }
-    
+
     const user = await User.findById(req.user.id);
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
-    
+
     if (fullName) user.fullName = fullName;
     if (email) user.email = email.toLowerCase();
-    
+
     await user.save();
-    
+
     res.json({
       success: true,
       message: "Profile updated successfully",
@@ -360,7 +373,7 @@ export const updateUserProfile = async (req, res) => {
         fullName: user.fullName,
         email: user.email,
         isAdmin: user.isAdmin,
-      }
+      },
     });
   } catch (error) {
     console.error("Update profile error:", error);
@@ -368,13 +381,13 @@ export const updateUserProfile = async (req, res) => {
   }
 };
 
-// ==================== INTERVIEW HISTORY ====================
+// INTERVIEW HISTORY
 
 // Save Interview Result
 export const saveInterviewResult = async (req, res) => {
   try {
     const { role, score, feedback, answers, duration, passed } = req.body;
-    
+
     const interview = new Interview({
       userId: req.user.id,
       role,
@@ -385,11 +398,13 @@ export const saveInterviewResult = async (req, res) => {
       answers: answers || [],
       feedback: feedback || { strengths: [], improvements: [] },
     });
-    
+
     await interview.save();
-    
-    console.log(`✅ Interview saved for user ${req.user.email}: ${role} - Score: ${score}`);
-    
+
+    console.log(
+      `Interview saved for user ${req.user.email}: ${role} - Score: ${score}`,
+    );
+
     res.json({
       success: true,
       message: "Interview result saved successfully",
@@ -407,15 +422,21 @@ export const getInterviewHistory = async (req, res) => {
     const interviews = await Interview.find({ userId: req.user.id })
       .sort({ createdAt: -1 })
       .limit(50);
-    
+
     const totalInterviews = interviews.length;
-    const averageScore = interviews.length > 0 
-      ? Math.round(interviews.reduce((sum, i) => sum + i.score, 0) / interviews.length)
-      : 0;
-    const passedCount = interviews.filter(i => i.passed).length;
+    const averageScore =
+      interviews.length > 0
+        ? Math.round(
+            interviews.reduce((sum, i) => sum + i.score, 0) / interviews.length,
+          )
+        : 0;
+    const passedCount = interviews.filter((i) => i.passed).length;
     const failedCount = totalInterviews - passedCount;
-    const totalDuration = interviews.reduce((sum, i) => sum + (i.duration || 0), 0);
-    
+    const totalDuration = interviews.reduce(
+      (sum, i) => sum + (i.duration || 0),
+      0,
+    );
+
     res.json({
       success: true,
       interviews,
@@ -438,11 +459,13 @@ export const getInterviewDetails = async (req, res) => {
   try {
     const { id } = req.params;
     const interview = await Interview.findOne({ _id: id, userId: req.user.id });
-    
+
     if (!interview) {
-      return res.status(404).json({ success: false, message: "Interview not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Interview not found" });
     }
-    
+
     res.json({
       success: true,
       interview,
@@ -457,12 +480,17 @@ export const getInterviewDetails = async (req, res) => {
 export const deleteInterview = async (req, res) => {
   try {
     const { id } = req.params;
-    const interview = await Interview.findOneAndDelete({ _id: id, userId: req.user.id });
-    
+    const interview = await Interview.findOneAndDelete({
+      _id: id,
+      userId: req.user.id,
+    });
+
     if (!interview) {
-      return res.status(404).json({ success: false, message: "Interview not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Interview not found" });
     }
-    
+
     res.json({ success: true, message: "Interview deleted successfully" });
   } catch (error) {
     console.error("Delete interview error:", error);
@@ -470,16 +498,18 @@ export const deleteInterview = async (req, res) => {
   }
 };
 
-// ==================== ADMIN FUNCTIONS ====================
+//ADMIN FUNCTIONS
 
 // Get all users (Admin only)
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({}).select("-password").sort({ createdAt: -1 });
-    res.json({ 
-      success: true, 
+    const users = await User.find({})
+      .select("-password")
+      .sort({ createdAt: -1 });
+    res.json({
+      success: true,
       users,
-      total: users.length 
+      total: users.length,
     });
   } catch (error) {
     console.error("Get all users error:", error);
@@ -492,11 +522,13 @@ export const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
     const user = await User.findByIdAndDelete(id);
-    
+
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
-    
+
     res.json({ success: true, message: "User deleted successfully" });
   } catch (error) {
     console.error("Delete user error:", error);
@@ -509,21 +541,23 @@ export const toggleBlockUser = async (req, res) => {
   try {
     const { id } = req.params;
     const { isBlocked } = req.body;
-    
+
     const user = await User.findByIdAndUpdate(
       id,
       { isBlocked },
-      { new: true }
+      { new: true },
     ).select("-password");
-    
+
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
-    
-    res.json({ 
-      success: true, 
+
+    res.json({
+      success: true,
       message: `User ${isBlocked ? "blocked" : "unblocked"} successfully`,
-      user 
+      user,
     });
   } catch (error) {
     console.error("Toggle block error:", error);
@@ -536,33 +570,36 @@ export const toggleAdminUser = async (req, res) => {
   try {
     const { id } = req.params;
     const { isAdmin } = req.body;
-    
+
     const adminCount = await User.countDocuments({ isAdmin: true });
-    
+
     if (adminCount === 1 && isAdmin === false) {
       const userToUpdate = await User.findById(id);
       if (userToUpdate && userToUpdate.isAdmin) {
-        return res.status(400).json({ 
-          success: false, 
-          message: "Cannot remove the only admin. At least one admin must exist." 
+        return res.status(400).json({
+          success: false,
+          message:
+            "Cannot remove the only admin. At least one admin must exist.",
         });
       }
     }
-    
+
     const user = await User.findByIdAndUpdate(
       id,
       { isAdmin },
-      { new: true }
+      { new: true },
     ).select("-password");
-    
+
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
-    
-    res.json({ 
-      success: true, 
+
+    res.json({
+      success: true,
       message: `Admin status updated successfully`,
-      user 
+      user,
     });
   } catch (error) {
     console.error("Toggle admin error:", error);
@@ -570,20 +607,19 @@ export const toggleAdminUser = async (req, res) => {
   }
 };
 
-
-// ==================== ADMIN INTERVIEW FUNCTIONS ====================
+// ADMIN INTERVIEW FUNCTIONS
 
 // Get all interviews for all users (Admin only)
 export const getAllInterviews = async (req, res) => {
   try {
     console.log("Admin fetching all interviews");
-    
+
     const interviews = await Interview.find({})
       .sort({ createdAt: -1 })
       .limit(100);
-    
+
     console.log(`Found ${interviews.length} total interviews`);
-    
+
     res.json({
       success: true,
       interviews: interviews,
@@ -600,16 +636,16 @@ export const getAdminInterviewStats = async (req, res) => {
   try {
     const totalInterviews = await Interview.countDocuments();
     const avgScore = await Interview.aggregate([
-      { $group: { _id: null, avg: { $avg: "$score" } } }
+      { $group: { _id: null, avg: { $avg: "$score" } } },
     ]);
     const passedCount = await Interview.countDocuments({ passed: true });
     const failedCount = await Interview.countDocuments({ passed: false });
-    
+
     // Get interviews by role
     const interviewsByRole = await Interview.aggregate([
-      { $group: { _id: "$role", count: { $sum: 1 } } }
+      { $group: { _id: "$role", count: { $sum: 1 } } },
     ]);
-    
+
     res.json({
       success: true,
       stats: {
@@ -618,7 +654,7 @@ export const getAdminInterviewStats = async (req, res) => {
         passedCount,
         failedCount,
         interviewsByRole,
-      }
+      },
     });
   } catch (error) {
     console.error("Get admin stats error:", error);

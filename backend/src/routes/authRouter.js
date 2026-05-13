@@ -1,7 +1,7 @@
 import express from "express";
-import { 
-  registerUser, 
-  loginUser, 
+import {
+  registerUser,
+  loginUser,
   getCurrentUser,
   forgotPassword,
   verifyResetToken,

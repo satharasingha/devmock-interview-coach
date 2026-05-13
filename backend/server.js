@@ -1,5 +1,4 @@
 import dotenv from 'dotenv';
-// Load environment variables FIRST - before any other imports
 dotenv.config();
 
 import express from 'express';
@@ -11,10 +10,10 @@ import { errorHandler } from './src/middleware/errorHandler.js';
 import authRoutes from './src/routes/authRouter.js'
 import contactRoutes from './src/routes/contactRoutes.js';
 import correctionRoutes from './src/routes/correctionRoutes.js';
-// Debug: Check if email credentials are loaded
 
-console.log('EMAIL_USER:', process.env.EMAIL_USER ? '✅ Loaded' : '❌ Missing');
-console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? '✅ Loaded' : '❌ Missing');
+// Debug: Check if email credentials are loaded
+console.log('EMAIL_USER:', process.env.EMAIL_USER ? 'Loaded' : 'Missing');
+console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? 'Loaded' : 'Missing');
 
 
 const app = express();

@@ -8,15 +8,15 @@ const createTransporter = () => {
   return nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 465,
-    secure: true, // true for 465, false for other ports
+    secure: true,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
     tls: {
-      rejectUnauthorized: false, // For development only - fixes self-signed certificate error
+      rejectUnauthorized: false,
     },
-    debug: true, // Enable debug output
+    debug: true,
     logger: true, // Log info
   });
 };
@@ -35,7 +35,9 @@ router.post("/send", async (req, res) => {
   // Validate email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
-    return res.status(400).json({ message: "Please enter a valid email address" });
+    return res
+      .status(400)
+      .json({ message: "Please enter a valid email address" });
   }
 
   try {
@@ -142,29 +144,31 @@ router.post("/send", async (req, res) => {
     await transporter.sendMail(userMailOptions);
     console.log("User auto-reply sent successfully");
 
-    res.status(200).json({ 
-      success: true, 
-      message: "Your message has been sent successfully! We'll get back to you soon." 
+    res.status(200).json({
+      success: true,
+      message:
+        "Your message has been sent successfully! We'll get back to you soon.",
     });
-    
   } catch (error) {
     console.error("Email error details:", error);
-    
+
     // Provide more specific error messages
     let errorMessage = "Failed to send email. Please try again.";
-    
+
     if (error.code === "EAUTH") {
-      errorMessage = "Email authentication failed. Please check your email credentials.";
+      errorMessage =
+        "Email authentication failed. Please check your email credentials.";
     } else if (error.code === "ESOCKET") {
       errorMessage = "Network error. Please check your internet connection.";
     } else if (error.message.includes("self-signed certificate")) {
       errorMessage = "SSL certificate error. Please try again later.";
     }
-    
-    res.status(500).json({ 
-      success: false, 
+
+    res.status(500).json({
+      success: false,
       message: errorMessage,
-      details: process.env.NODE_ENV === "development" ? error.message : undefined
+      details:
+        process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 });

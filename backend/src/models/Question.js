@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 // This defines the structure of your question data
 const questionSchema = new mongoose.Schema({
-  // Question ID (1, 2, 3, etc.)
+  // Question ID
   id: {
     type: Number,
     required: true,

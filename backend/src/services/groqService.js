@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Debug: Check if API key is loaded
-console.log('GROQ_API_KEY loaded:', process.env.GROQ_API_KEY ? '✅ Yes' : '❌ No');
+console.log('GROQ_API_KEY loaded:', process.env.GROQ_API_KEY ? 'Yes' : 'No');
 console.log('API Key length:', process.env.GROQ_API_KEY?.length || 0);
 
 // Initialize Groq client with explicit API key
@@ -181,7 +181,7 @@ Remember:
       timestamp: Date.now(),
     });
 
-    console.log(`✅ Groq evaluation complete - Score: ${evaluatedResult.final_score}/10`);
+    console.log(`Groq evaluation complete - Score: ${evaluatedResult.final_score}/10`);
     return evaluatedResult;
 
   } catch (error) {
