@@ -29,7 +29,7 @@ import {
 export default function AboutUs() {
   const teamMembers = [
     {
-      name: "Satharasingha Sathsarani",
+      name: "Satharasingha",
       role: "Project Lead & Full Stack Developer",
       bio: "Final year Software Engineering student passionate about AI and educational technology.",
       initials: "SS",
