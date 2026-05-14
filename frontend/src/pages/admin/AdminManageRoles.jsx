@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminSidebar from "../../components/AdminSidebar";
 import AdminNavbar from "../../components/AdminNavbar";
-import { Trash2, Eye, Calendar, Briefcase, Award, Clock, AlertCircle } from "lucide-react";
+import { Trash2, Eye, Briefcase, AlertCircle, Clock } from "lucide-react";
 
 export default function AdminInterviews() {
   const navigate = useNavigate();
@@ -34,14 +34,10 @@ export default function AdminInterviews() {
               title: role,
               questions: [],
               totalQuestions: 0,
-              difficultyCounts: { Easy: 0, Medium: 0, Hard: 0 }
             };
           }
           acc[role].questions.push(question);
           acc[role].totalQuestions++;
-          if (question.difficulty) {
-            acc[role].difficultyCounts[question.difficulty]++;
-          }
           return acc;
         }, {});
         
@@ -49,8 +45,6 @@ export default function AdminInterviews() {
         const interviewsArray = Object.values(groupedByRole).map(role => ({
           ...role,
           color: getRoleColor(role.title),
-          gradient: getRoleGradient(role.title),
-          icon: getRoleIcon(role.title),
           type: role.title.toLowerCase().includes('intern') ? 'intern' : 'full-time',
           level: getRoleLevel(role.title)
         }));
@@ -75,26 +69,6 @@ export default function AdminInterviews() {
     return "from-gray-500 to-gray-600";
   };
 
-  const getRoleGradient = (title) => {
-    if (title.includes("Intern")) return "from-emerald-50 to-teal-50";
-    if (title.includes("Software Engineer")) return "from-blue-50 to-indigo-50";
-    if (title.includes("Full Stack")) return "from-cyan-50 to-blue-50";
-    if (title.includes("Frontend")) return "from-sky-50 to-blue-50";
-    if (title.includes("Backend")) return "from-indigo-50 to-blue-50";
-    if (title.includes("Data")) return "from-purple-50 to-violet-50";
-    return "from-gray-50 to-gray-100";
-  };
-
-  const getRoleIcon = (title) => {
-    if (title.includes("Intern")) return "🎓";
-    if (title.includes("Software Engineer")) return "💻";
-    if (title.includes("Full Stack")) return "🔄";
-    if (title.includes("Frontend")) return "🎨";
-    if (title.includes("Backend")) return "⚙️";
-    if (title.includes("Data")) return "📊";
-    return "📁";
-  };
-
   const getRoleLevel = (title) => {
     if (title.includes("Intern")) return "Intern";
     if (title.includes("Senior")) return "Senior";
@@ -104,7 +78,6 @@ export default function AdminInterviews() {
 
   const handleDeleteInterview = async (interview) => {
     try {
-      // Delete all questions for this job role
       const response = await fetch(`http://localhost:3000/api/questions/role/${encodeURIComponent(interview.title)}`, {
         method: 'DELETE',
       });
@@ -228,19 +201,11 @@ export default function AdminInterviews() {
                   <div className={`h-1.5 bg-gradient-to-r ${interview.color}`}></div>
                   
                   <div className="p-5 sm:p-6">
-                    {/* Header with icon and delete button */}
+                    {/* Header with title and type badge */}
                     <div className="flex items-start justify-between mb-3">
-                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${interview.color} bg-opacity-10 flex items-center justify-center text-2xl transform group-hover:scale-110 transition-transform duration-300`}>
-                        {interview.icon}
-                      </div>
-                      
-                      {/* Delete Button - Shows on hover */}
-                      <button
-                        onClick={() => setShowDeleteModal(interview)}
-                        className="absolute top-4 right-4 p-2 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-red-600 transform hover:scale-105 shadow-md"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      <h3 className="text-lg font-semibold text-gray-800">
+                        {interview.title}
+                      </h3>
                       
                       {/* Type badge */}
                       <span className={`text-xs font-medium px-2 py-1 rounded-full ${
@@ -251,26 +216,12 @@ export default function AdminInterviews() {
                         {interview.type === "intern" ? "Intern" : "Full Time"}
                       </span>
                     </div>
-
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                      {interview.title}
-                    </h3>
                     
                     <div className="space-y-2 mb-4">
                       {/* Total Questions */}
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Briefcase size={14} className="text-gray-400" />
                         <span>{interview.totalQuestions} Questions</span>
-                      </div>
-                      
-                      {/* Difficulty Distribution */}
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Award size={14} className="text-gray-400" />
-                        <div className="flex gap-2">
-                          <span className="text-emerald-600">Easy: {interview.difficultyCounts.Easy || 0}</span>
-                          <span className="text-blue-600">Medium: {interview.difficultyCounts.Medium || 0}</span>
-                          <span className="text-purple-600">Hard: {interview.difficultyCounts.Hard || 0}</span>
-                        </div>
                       </div>
                       
                       {/* Level */}
@@ -288,13 +239,11 @@ export default function AdminInterviews() {
                       </div>
                       <div className="bg-gray-50 rounded-lg p-2 text-center">
                         <p className="text-xs text-gray-500">Categories</p>
-                        <p className="text-lg font-semibold text-gray-800">
-                          {Object.values(interview.difficultyCounts).filter(v => v > 0).length}
-                        </p>
+                        <p className="text-lg font-semibold text-gray-800">Multiple</p>
                       </div>
                     </div>
 
-                    {/* Action Buttons */}
+                    {/* Action Buttons - Side by side */}
                     <div className="flex gap-2">
                       <button
                         onClick={() => navigate(`/admin/questions?role=${encodeURIComponent(interview.title)}`)}
@@ -302,6 +251,13 @@ export default function AdminInterviews() {
                       >
                         <Eye size={16} />
                         View Questions
+                      </button>
+                      <button
+                        onClick={() => setShowDeleteModal(interview)}
+                        className="inline-flex items-center justify-center gap-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg px-3 py-2 transition-all duration-300 shadow-sm hover:shadow-md"
+                      >
+                        <Trash2 size={16} />
+                        Delete
                       </button>
                     </div>
                   </div>
@@ -311,7 +267,7 @@ export default function AdminInterviews() {
           ) : (
             // No results state
             <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
-              <div className="text-5xl mb-4 opacity-50">📋</div>
+              <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-700 mb-2">No interviews found</h3>
               <p className="text-gray-500">Try adjusting your search or filters</p>
             </div>
