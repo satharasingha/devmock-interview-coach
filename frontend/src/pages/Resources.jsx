@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-// Using ONLY the most basic, guaranteed icons from lucide-react
+
 import {
   BookOpen,
   Code,
@@ -9,7 +9,6 @@ import {
   Wrench,
   Users,
   FileText,
-  Link,
   Download,
   ExternalLink,
   Search,
@@ -24,8 +23,6 @@ import {
   FileCheck,
   Sparkles,
   Globe,
-  Star,
-  TrendingUp,
 } from "lucide-react";
 
 export default function Resources() {
@@ -41,8 +38,25 @@ export default function Resources() {
     { id: "community", name: "Community", icon: Users, color: "from-indigo-500 to-blue-500" },
   ];
 
+  // Helper function to render icon
+  const renderIcon = (resource) => {
+    // Handle SVG files from public folder
+    if (resource.useSvg) {
+      return (
+        <img 
+          src={`/${resource.svgName}`} 
+          alt={resource.title}
+          className="w-6 h-6 object-contain"
+        />
+      );
+    }
+    // Handle Lucide icons
+    const IconComponent = resource.icon;
+    return <IconComponent className="w-6 h-6 text-blue-600" />;
+  };
+
   const resources = [
-    // Interview Guides
+    // ==================== INTERVIEW GUIDES ====================
     {
       id: 1,
       title: "STAR Method Guide for Behavioral Interviews",
@@ -50,8 +64,8 @@ export default function Resources() {
       category: "guides",
       type: "PDF",
       icon: FileText,
-      link: "/resources/star-method-guide.pdf",
-      downloadable: true,
+      link: "https://www.themuse.com/advice/star-interview-method",
+      external: true,
       readTime: "10 min read",
       difficulty: "Beginner",
       featured: true,
@@ -63,8 +77,8 @@ export default function Resources() {
       category: "guides",
       type: "Article",
       icon: FileText,
-      link: "#",
-      downloadable: false,
+      link: "https://www.interviewbit.com/technical-interview-questions/",
+      external: true,
       readTime: "20 min read",
       difficulty: "Intermediate",
       featured: true,
@@ -76,8 +90,8 @@ export default function Resources() {
       category: "guides",
       type: "Guide",
       icon: FileText,
-      link: "#",
-      downloadable: true,
+      link: "https://github.com/donnemartin/system-design-primer",
+      external: true,
       readTime: "15 min read",
       difficulty: "Advanced",
       featured: false,
@@ -89,214 +103,288 @@ export default function Resources() {
       category: "guides",
       type: "Guide",
       icon: FileText,
-      link: "#",
-      downloadable: true,
+      link: "https://www.indeed.com/career-advice/interviewing/behavioral-interview-questions-and-answers",
+      external: true,
       readTime: "12 min read",
       difficulty: "Beginner",
       featured: false,
     },
-
-    // Learning Materials
     {
       id: 5,
-      title: "React.js Complete Tutorial",
-      description: "Free YouTube playlist covering React from basics to advanced concepts with projects.",
-      category: "learning",
-      type: "Video",
-      icon: Play,
-      link: "https://youtube.com",
+      title: "LeetCode Patterns for Coding Interviews",
+      description: "Common coding patterns and algorithms to master for technical interviews.",
+      category: "guides",
+      type: "Guide",
+      icon: Code,
+      link: "https://github.com/seanprashad/leetcode-patterns",
       external: true,
-      platform: "YouTube",
-      duration: "8 hours",
-      difficulty: "Beginner",
-      featured: true,
-    },
-    {
-      id: 6,
-      title: "Node.js & Express.js Masterclass",
-      description: "Comprehensive course on building backend APIs with Node.js, Express, and MongoDB.",
-      category: "learning",
-      type: "Course",
-      icon: Play,
-      link: "https://coursera.org",
-      external: true,
-      platform: "Coursera",
-      duration: "12 hours",
-      difficulty: "Intermediate",
-      featured: false,
-    },
-    {
-      id: 7,
-      title: "Database Design & SQL Optimization",
-      description: "Learn database normalization, indexing, query optimization, and best practices.",
-      category: "learning",
-      type: "Article",
-      icon: BookOpen,
-      link: "#",
-      external: false,
       readTime: "25 min read",
       difficulty: "Intermediate",
       featured: false,
     },
+
+    // ==================== LEARNING MATERIALS ====================
     {
-      id: 8,
-      title: "Data Structures & Algorithms Crash Course",
-      description: "Master essential data structures and algorithms for technical interviews.",
+      id: 6,
+      title: "freeCodeCamp - Full Stack Web Development",
+      description: "Free, self-paced coding curriculum covering HTML, CSS, JavaScript, React, Node.js, and MongoDB.",
       category: "learning",
       type: "Course",
-      icon: GraduationCap,
-      link: "#",
-      external: false,
-      duration: "15 hours",
-      difficulty: "Intermediate",
-      featured: false,
-    },
-
-    // Career Development
-    {
-      id: 9,
-      title: "Software Engineer Resume Template",
-      description: "ATS-friendly resume template for IT professionals with formatting tips and examples.",
-      category: "career",
-      type: "Template",
-      icon: FileCheck,
-      link: "/resources/resume-template.docx",
-      downloadable: true,
-      readTime: "5 min read",
+      icon: Play,
+      link: "https://www.freecodecamp.org/learn",
+      external: true,
+      platform: "freeCodeCamp",
+      duration: "300+ hours",
       difficulty: "Beginner",
       featured: true,
     },
     {
+      id: 7,
+      title: "The Odin Project - Full Stack JavaScript",
+      description: "Free, open-source curriculum for learning full-stack web development.",
+      category: "learning",
+      type: "Course",
+      icon: GraduationCap,
+      link: "https://www.theodinproject.com/",
+      external: true,
+      platform: "The Odin Project",
+      duration: "200+ hours",
+      difficulty: "Beginner",
+      featured: true,
+    },
+    {
+      id: 8,
+      title: "CS50 - Harvard University (Free)",
+      description: "Introduction to Computer Science from Harvard University. Covers algorithms, data structures, and web development.",
+      category: "learning",
+      type: "Course",
+      icon: Play,
+      link: "https://cs50.harvard.edu/x/",
+      external: true,
+      platform: "Harvard",
+      duration: "12 weeks",
+      difficulty: "Beginner",
+      featured: false,
+    },
+    {
+      id: 9,
+      title: "MIT OpenCourseWare - Introduction to Algorithms",
+      description: "MIT's undergraduate course on algorithms with video lectures and assignments.",
+      category: "learning",
+      type: "Course",
+      icon: GraduationCap,
+      link: "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/",
+      external: true,
+      platform: "MIT",
+      duration: "20 hours",
+      difficulty: "Advanced",
+      featured: false,
+    },
+    {
       id: 10,
-      title: "LinkedIn Profile Optimization Guide",
-      description: "How to optimize your LinkedIn profile to attract recruiters and showcase your skills.",
-      category: "career",
+      title: "Roadmap.sh - Developer Roadmaps",
+      description: "Community-driven roadmaps for Frontend, Backend, DevOps, and more.",
+      category: "learning",
       type: "Guide",
-      icon: Briefcase,
-      link: "#",
-      external: false,
-      readTime: "15 min read",
+      icon: Target,
+      link: "https://roadmap.sh/",
+      external: true,
+      readTime: "5 min read",
       difficulty: "Beginner",
       featured: false,
     },
     {
       id: 11,
+      title: "YouTube - FreeCodeCamp JavaScript Tutorial",
+      description: "Complete JavaScript tutorial for beginners to advanced concepts.",
+      category: "learning",
+      type: "Video",
+      useSvg: true,
+      svgName: "youtube.png",
+      link: "https://www.youtube.com/watch?v=PkZNo7MFNFg",
+      external: true,
+      platform: "YouTube",
+      duration: "10 hours",
+      difficulty: "Beginner",
+      featured: false,
+    },
+
+    // CAREER DEVELOPMENT 
+    {
+      id: 12,
+      title: "Resume Template for Software Engineers (LaTeX)",
+      description: "ATS-friendly resume template for software engineers with LaTeX source code.",
+      category: "career",
+      type: "Template",
+      icon: FileCheck,
+      link: "https://www.overleaf.com/latex/templates/software-engineer-resume-template/gkqmynnqjnjz",
+      external: true,
+      downloadable: true,
+      readTime: "5 min read",
+      difficulty: "Beginner",
+      featured: true,
+    },
+    {
+      id: 13,
+      title: "LinkedIn Profile Optimization Guide",
+      description: "Complete guide to optimizing your LinkedIn profile for recruiters.",
+      category: "career",
+      type: "Guide",
+      useSvg: true,
+      svgName: "linkedin.svg",
+      link: "https://www.linkedin.com/business/talent/blog/talent-acquisition/how-to-optimize-your-linkedin-profile",
+      external: true,
+      readTime: "15 min read",
+      difficulty: "Beginner",
+      featured: false,
+    },
+    {
+      id: 14,
       title: "Job Search Strategies for Fresh Graduates",
       description: "Effective job search techniques, networking tips, and interview preparation strategies.",
       category: "career",
       type: "Article",
       icon: Target,
-      link: "#",
-      external: false,
+      link: "https://www.indeed.com/career-advice/finding-a-job/job-search-strategies",
+      external: true,
       readTime: "12 min read",
       difficulty: "Beginner",
       featured: false,
     },
     {
-      id: 12,
-      title: "Negotiation Skills for Tech Professionals",
+      id: 15,
+      title: "Salary Negotiation Guide for Tech Professionals",
       description: "Learn how to negotiate salary, benefits, and job offers effectively.",
       category: "career",
       type: "Guide",
-      icon: TrendingUp,
-      link: "#",
-      external: false,
-      readTime: "10 min read",
+      icon: Briefcase,
+      link: "https://www.levels.fyi/blog/salary-negotiation-guide.html",
+      external: true,
+      readTime: "20 min read",
       difficulty: "Intermediate",
       featured: false,
     },
 
-    // Tools & Software
+    // ==================== TOOLS & SOFTWARE ====================
     {
-      id: 13,
-      title: "VS Code Setup for Developers",
-      description: "Best extensions, themes, and settings for productive development environment.",
+      id: 16,
+      title: "VS Code Essential Extensions for Developers",
+      description: "Best extensions for productivity: Prettier, ESLint, GitLens, Thunder Client, and more.",
       category: "tools",
       type: "Guide",
       icon: Code,
-      link: "#",
-      external: false,
-      readTime: "8 min read",
+      link: "https://code.visualstudio.com/docs/editor/extension-gallery",
+      external: true,
+      readTime: "10 min read",
       difficulty: "Beginner",
       featured: true,
     },
     {
-      id: 14,
-      title: "Git & GitHub Workflow Guide",
-      description: "Complete guide to version control, branching strategies, and collaboration best practices.",
+      id: 17,
+      title: "GitHub - Git Cheat Sheet",
+      description: "Official Git cheat sheet with common commands and workflows.",
       category: "tools",
       type: "Guide",
-      icon: Code,
-      link: "#",
-      external: false,
-      readTime: "20 min read",
-      difficulty: "Beginner",
-      featured: false,
-    },
-    {
-      id: 15,
-      title: "Portfolio Website Templates",
-      description: "Free HTML/CSS templates for building your developer portfolio.",
-      category: "tools",
-      type: "Template",
-      icon: Code,
-      link: "#",
-      downloadable: true,
+      useSvg: true,
+      svgName: "github.svg",
+      link: "https://training.github.com/downloads/github-git-cheat-sheet/",
+      external: true,
       readTime: "5 min read",
       difficulty: "Beginner",
       featured: false,
     },
     {
-      id: 16,
-      title: "Debugging Tools & Techniques",
-      description: "Essential debugging tools and techniques for frontend and backend development.",
-      category: "tools",
-      type: "Guide",
-      icon: Wrench,
-      link: "#",
-      external: false,
-      readTime: "15 min read",
-      difficulty: "Intermediate",
-      featured: false,
-    },
-
-    // Community
-    {
-      id: 17,
-      title: "Developer Discord Communities",
-      description: "Join active developer communities for networking, help, and collaboration.",
-      category: "community",
-      type: "Link",
-      icon: Users,
-      link: "#",
-      external: true,
-      platform: "Discord",
-      difficulty: "Beginner",
-      featured: true,
-    },
-    {
       id: 18,
-      title: "Tech Events & Hackathons 2025",
-      description: "Calendar of upcoming virtual and in-person tech events and hackathons.",
-      category: "community",
-      type: "Calendar",
-      icon: Calendar,
-      link: "#",
-      external: false,
+      title: "Postman API Testing Tool",
+      description: "Download Postman for API testing and collaboration.",
+      category: "tools",
+      type: "Tool",
+      icon: Wrench,
+      link: "https://www.postman.com/downloads/",
+      external: true,
+      downloadable: true,
       readTime: "5 min read",
       difficulty: "Beginner",
       featured: false,
     },
     {
       id: 19,
-      title: "Stack Overflow Community",
-      description: "Join the largest developer community for Q&A and knowledge sharing.",
+      title: "Figma - Free Design Tool",
+      description: "Create UI/UX designs, wireframes, and prototypes for free.",
+      category: "tools",
+      type: "Tool",
+      icon: Wrench,
+      link: "https://www.figma.com/",
+      external: true,
+      readTime: "10 min read",
+      difficulty: "Beginner",
+      featured: false,
+    },
+
+    // ==================== COMMUNITY ====================
+    {
+      id: 20,
+      title: "Dev.to - Developer Community",
+      description: "Join the largest developer community for articles, discussions, and networking.",
+      category: "community",
+      type: "Link",
+      icon: Users,
+      link: "https://dev.to/",
+      external: true,
+      platform: "DEV",
+      difficulty: "Beginner",
+      featured: true,
+    },
+    {
+      id: 21,
+      title: "r/cscareerquestions on Reddit",
+      description: "Active community discussing careers, interviews, and job offers in tech.",
       category: "community",
       type: "Link",
       icon: Globe,
-      link: "#",
+      link: "https://www.reddit.com/r/cscareerquestions/",
+      external: true,
+      platform: "Reddit",
+      difficulty: "Beginner",
+      featured: false,
+    },
+    {
+      id: 22,
+      title: "Stack Overflow",
+      description: "Q&A community for programmers. Ask questions and get answers from experts.",
+      category: "community",
+      type: "Link",
+      icon: Globe,
+      link: "https://stackoverflow.com/",
       external: true,
       platform: "Stack Overflow",
+      difficulty: "Beginner",
+      featured: false,
+    },
+    {
+      id: 23,
+      title: "Tech Events & Hackathons 2025 - DevPost",
+      description: "Calendar of upcoming virtual and in-person hackathons.",
+      category: "community",
+      type: "Calendar",
+      icon: Calendar,
+      link: "https://devpost.com/hackathons",
+      external: true,
+      platform: "DevPost",
+      readTime: "5 min read",
+      difficulty: "Beginner",
+      featured: false,
+    },
+    {
+      id: 24,
+      title: "Women Who Code",
+      description: "Global nonprofit dedicated to inspiring women to excel in technology careers.",
+      category: "community",
+      type: "Link",
+      icon: Users,
+      link: "https://www.womenwhocode.com/",
+      external: true,
+      platform: "Women Who Code",
       difficulty: "Beginner",
       featured: false,
     },
@@ -360,12 +448,11 @@ export default function Resources() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredResources.map((resource) => {
-              const Icon = resource.icon;
               return (
                 <div key={resource.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition-all hover:-translate-y-1">
                   <div className="flex items-start justify-between mb-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl flex items-center justify-center">
-                      <Icon className="w-6 h-6 text-blue-600" />
+                      {renderIcon(resource)}
                     </div>
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${getDifficultyBadge(resource.difficulty)}`}>
                       {resource.difficulty}
@@ -383,15 +470,21 @@ export default function Resources() {
                           <span>{resource.type}</span>
                         </>
                       )}
+                      {resource.platform && (
+                        <>
+                          <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+                          <span>{resource.platform}</span>
+                        </>
+                      )}
                     </div>
                     <a
                       href={resource.link}
-                      target={resource.external ? "_blank" : "_self"}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:text-blue-700 text-sm font-medium inline-flex items-center gap-1"
                     >
-                      {resource.downloadable ? "Download" : "View Resource"}
-                      {resource.external ? <ExternalLink size={14} /> : <ChevronRight size={14} />}
+                      Visit Resource
+                      <ExternalLink size={14} />
                     </a>
                   </div>
                 </div>
@@ -441,12 +534,11 @@ export default function Resources() {
           {filteredResources.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredResources.map((resource) => {
-                const Icon = resource.icon;
                 return (
                   <div key={resource.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition-all hover:-translate-y-1 group">
                     <div className="flex items-start justify-between mb-4">
                       <div className={`w-12 h-12 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                        <Icon className="w-6 h-6 text-blue-600" />
+                        {renderIcon(resource)}
                       </div>
                       <span className={`text-xs px-2 py-1 rounded-full font-medium ${getDifficultyBadge(resource.difficulty)}`}>
                         {resource.difficulty}
@@ -473,26 +565,12 @@ export default function Resources() {
                       </div>
                       <a
                         href={resource.link}
-                        target={resource.external ? "_blank" : "_self"}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:text-blue-700 text-sm font-medium inline-flex items-center gap-1"
                       >
-                        {resource.downloadable ? (
-                          <>
-                            <Download size={14} />
-                            Download
-                          </>
-                        ) : resource.external ? (
-                          <>
-                            Visit
-                            <ExternalLink size={14} />
-                          </>
-                        ) : (
-                          <>
-                            Read More
-                            <ChevronRight size={14} />
-                          </>
-                        )}
+                        Visit Resource
+                        <ExternalLink size={14} />
                       </a>
                     </div>
                   </div>
@@ -537,5 +615,7 @@ export default function Resources() {
 
       <Footer />
     </div>
+
+    
   );
 }
