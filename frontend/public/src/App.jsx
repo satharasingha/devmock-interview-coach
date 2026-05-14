@@ -5,7 +5,7 @@ import InterviewSetup from "./pages/InterviewSetup";
 import LiveInterview from "./pages/LiveInterview";
 import Login from "./pages/Login";
 import Register from "./pages/Register"; 
-import AdminDashboard from "./pages/admin/adminDashboard";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import FeedbackPage from "./pages/FeedbackPage";
 import AdminAddQuestion from "./pages/admin/AdminAddQuestion";
 import AdminManageJobRoles from "./pages/admin/AdminManageRoles";
