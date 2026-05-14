@@ -1,21 +1,21 @@
 import { useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { 
-  Mail, 
-  MapPin, 
-  Phone, 
-  Send, 
-  CheckCircle, 
-  AlertCircle, 
-  User, 
-  MessageCircle, 
+import {
+  Mail,
+  MapPin,
+  Phone,
+  Send,
+  CheckCircle,
+  AlertCircle,
+  User,
+  MessageCircle,
   Clock,
   Headphones,
   Sparkles,
   ArrowRight,
   MessageSquare,
-  Building2
+  Building2,
 } from "lucide-react";
 
 export default function ContactUs() {
@@ -55,7 +55,9 @@ export default function ContactUs() {
       const data = await response.json();
 
       if (response.ok) {
-        setSuccess("Your message has been sent successfully! We'll get back to you soon.");
+        setSuccess(
+          "Your message has been sent successfully! We'll get back to you soon.",
+        );
         setFormData({ name: "", email: "", subject: "", message: "" });
       } else {
         setError(data.message || "Failed to send message. Please try again.");
@@ -109,15 +111,18 @@ export default function ContactUs() {
   const faqs = [
     {
       question: "How does the AI evaluation work?",
-      answer: "Our AI analyzes your spoken answers using natural language processing to check for key technical concepts and provide detailed feedback.",
+      answer:
+        "Our AI analyzes your spoken answers using natural language processing to check for key technical concepts and provide detailed feedback.",
     },
     {
       question: "Is my data secure?",
-      answer: "Yes! We never store audio or video recordings. All speech is processed in real-time and discarded after evaluation.",
+      answer:
+        "Yes! We never store audio or video recordings. All speech is processed in real-time and discarded after evaluation.",
     },
     {
       question: "What job roles are available?",
-      answer: "We support Software Engineer, Data Scientist, Frontend, Backend, DevOps, and Product Manager interviews.",
+      answer:
+        "We support Software Engineer, Data Scientist, Frontend, Backend, DevOps, and Product Manager interviews.",
     },
   ];
 
@@ -137,16 +142,19 @@ export default function ContactUs() {
           <div className="text-center max-w-3xl mx-auto">
             <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-full px-4 py-1.5 mb-6 shadow-sm">
               <Sparkles className="w-4 h-4 text-blue-500" />
-              <span className="text-xs font-medium text-slate-600 uppercase tracking-wider">WE'D LOVE TO HEAR FROM YOU</span>
+              <span className="text-xs font-medium text-slate-600 uppercase tracking-wider">
+                WE'D LOVE TO HEAR FROM YOU
+              </span>
             </div>
             <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-slate-900 mb-6 tracking-tight">
-              Get in{' '}
+              Get in{" "}
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-600">
                 Touch
               </span>
             </h1>
             <p className="text-slate-500 text-lg md:text-xl leading-relaxed max-w-2xl mx-auto">
-              Have questions about DevMock? Our team is here to help you ace your technical interviews.
+              Have questions about DevMock? Our team is here to help you ace
+              your technical interviews.
             </p>
           </div>
         </div>
@@ -166,12 +174,18 @@ export default function ContactUs() {
                   className="group bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer block"
                 >
                   <div className="flex flex-col items-center text-center">
-                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300 mb-4`}>
+                    <div
+                      className={`w-14 h-14 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300 mb-4`}
+                    >
                       <Icon className="w-7 h-7 text-white" />
                     </div>
-                    <h3 className="text-lg font-semibold text-slate-800 mb-1">{item.title}</h3>
+                    <h3 className="text-lg font-semibold text-slate-800 mb-1">
+                      {item.title}
+                    </h3>
                     <p className="text-slate-600 text-sm">{item.details}</p>
-                    <p className="text-slate-400 text-xs mt-1">{item.subDetails}</p>
+                    <p className="text-slate-400 text-xs mt-1">
+                      {item.subDetails}
+                    </p>
                   </div>
                 </a>
               );
@@ -183,8 +197,12 @@ export default function ContactUs() {
             <div className="lg:col-span-1">
               <div className="bg-gradient-to-r from-blue-600 to-cyan-600 rounded-2xl p-6 text-center shadow-lg h-full flex flex-col items-center justify-center">
                 <Headphones className="w-12 h-12 text-white mx-auto mb-3 opacity-90" />
-                <h3 className="text-xl font-semibold text-white mb-1">Live Chat Support</h3>
-                <p className="text-blue-100 text-sm mb-4">Available 24/7 for urgent queries</p>
+                <h3 className="text-xl font-semibold text-white mb-1">
+                  Live Chat Support
+                </h3>
+                <p className="text-blue-100 text-sm mb-4">
+                  Available 24/7 for urgent queries
+                </p>
                 <button className="px-5 py-2.5 bg-white/20 backdrop-blur-sm text-white rounded-xl text-sm font-medium hover:bg-white/30 transition">
                   Start Live Chat
                 </button>
@@ -195,8 +213,12 @@ export default function ContactUs() {
             <div className="lg:col-span-2">
               <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
                 <div className="bg-gradient-to-r from-blue-600 to-cyan-600 px-8 py-6">
-                  <h2 className="text-2xl font-bold text-white mb-1">Send us a Message</h2>
-                  <p className="text-blue-100 text-sm">We'll get back to you within 24 hours</p>
+                  <h2 className="text-2xl font-bold text-white mb-1">
+                    Send us a Message
+                  </h2>
+                  <p className="text-blue-100 text-sm">
+                    We'll get back to you within 24 hours
+                  </p>
                 </div>
 
                 <div className="p-6 md:p-8">
@@ -206,7 +228,9 @@ export default function ContactUs() {
                         <CheckCircle className="w-4 h-4 text-emerald-600" />
                       </div>
                       <div>
-                        <p className="font-medium text-emerald-800">Message Sent!</p>
+                        <p className="font-medium text-emerald-800">
+                          Message Sent!
+                        </p>
                         <p className="text-sm text-emerald-600">{success}</p>
                       </div>
                     </div>
@@ -324,22 +348,33 @@ export default function ContactUs() {
             <div className="text-center max-w-2xl mx-auto mb-10">
               <div className="inline-flex items-center gap-2 bg-slate-100 rounded-full px-4 py-1.5 mb-4">
                 <MessageSquare className="w-4 h-4 text-blue-600" />
-                <span className="text-xs font-medium text-slate-600 uppercase tracking-wider">FAQ</span>
+                <span className="text-xs font-medium text-slate-600 uppercase tracking-wider">
+                  FAQ
+                </span>
               </div>
               <h2 className="text-2xl md:text-3xl font-bold text-slate-800">
                 Frequently Asked Questions
               </h2>
-              <p className="text-slate-500 mt-2">Quick answers to common questions</p>
+              <p className="text-slate-500 mt-2">
+                Quick answers to common questions
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {faqs.map((faq, index) => (
-                <div key={index} className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-all group">
+                <div
+                  key={index}
+                  className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-all group"
+                >
                   <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <MessageCircle className="w-5 h-5 text-blue-600" />
                   </div>
-                  <h3 className="font-semibold text-slate-800 mb-2">{faq.question}</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed">{faq.answer}</p>
+                  <h3 className="font-semibold text-slate-800 mb-2">
+                    {faq.question}
+                  </h3>
+                  <p className="text-sm text-slate-500 leading-relaxed">
+                    {faq.answer}
+                  </p>
                 </div>
               ))}
             </div>
@@ -351,9 +386,12 @@ export default function ContactUs() {
               <div className="grid grid-cols-1 md:grid-cols-2">
                 <div className="p-8 md:p-10">
                   <Building2 className="w-10 h-10 text-blue-400 mb-4" />
-                  <h3 className="text-2xl font-bold text-white mb-2">Visit Our Campus</h3>
+                  <h3 className="text-2xl font-bold text-white mb-2">
+                    Visit Our Campus
+                  </h3>
                   <p className="text-slate-300 mb-4 leading-relaxed">
-                    We're located at the University of Plymouth, easily accessible by public transport.
+                    We're located at the University of Plymouth, easily
+                    accessible by public transport.
                   </p>
                   <div className="space-y-2 text-sm text-slate-400">
                     <p>📍 Drake Circus, Plymouth, PL4 8AA</p>

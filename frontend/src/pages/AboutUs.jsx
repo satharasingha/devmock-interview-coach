@@ -45,7 +45,7 @@ export default function AboutUs() {
           }
         });
       },
-      { threshold: 0.3 }
+      { threshold: 0.3 },
     );
 
     const elements = document.querySelectorAll(".animate-on-scroll");
@@ -56,7 +56,7 @@ export default function AboutUs() {
 
   const teamMembers = [
     {
-      name: "Satharasingha Sathsarani",
+      name: "Satharasingha",
       role: "Project Lead & Full Stack Developer",
       bio: "Final year Software Engineering student passionate about AI and educational technology. Built DevMock from the ground up.",
       initials: "SS",
@@ -77,21 +77,24 @@ export default function AboutUs() {
     {
       icon: Users,
       title: "Student First",
-      description: "Every feature is designed with student success as the primary goal.",
+      description:
+        "Every feature is designed with student success as the primary goal.",
       color: "from-blue-500 to-cyan-500",
       bgColor: "bg-blue-50",
     },
     {
       icon: Shield,
       title: "Privacy First",
-      description: "Zero audio/video storage. Your data stays private and secure.",
+      description:
+        "Zero audio/video storage. Your data stays private and secure.",
       color: "from-emerald-500 to-teal-500",
       bgColor: "bg-emerald-50",
     },
     {
       icon: Lightbulb,
       title: "Explainable AI",
-      description: "Transparent feedback showing exactly what you did right or wrong.",
+      description:
+        "Transparent feedback showing exactly what you did right or wrong.",
       color: "from-amber-500 to-orange-500",
       bgColor: "bg-amber-50",
     },
@@ -137,47 +140,35 @@ export default function AboutUs() {
 
   const milestones = [
     {
-      year: "2024",
+      year: "2025",
       title: "Project Initiated",
-      description: "Started development of DevMock platform with a vision to help students",
+      description:
+        "Started development of DevMock platform with a vision to help students",
       icon: Rocket,
       color: "from-blue-500 to-cyan-500",
     },
     {
-      year: "2024",
+      year: "2025",
       title: "MVP Launch",
-      description: "Released core interview practice features with speech recognition",
+      description:
+        "Released core interview practice features with speech recognition",
       icon: Zap,
       color: "from-amber-500 to-orange-500",
     },
     {
-      year: "2025",
+      year: "2026",
       title: "AI Integration",
-      description: "Added Groq API for intelligent answer evaluation and feedback",
+      description:
+        "Added Groq API for intelligent answer evaluation and feedback",
       icon: Sparkles,
       color: "from-purple-500 to-pink-500",
     },
     {
-      year: "2025",
+      year: "2026",
       title: "Student Success",
       description: "Helped 500+ students prepare for technical interviews",
       icon: Award,
       color: "from-emerald-500 to-teal-500",
-    },
-  ];
-
-  const testimonials = [
-    {
-      quote: "DevMock helped me prepare for my Amazon interview. The real-time feedback was invaluable!",
-      author: "Ruchira Perera",
-      role: "Software Engineer at Amazon",
-      rating: 5,
-    },
-    {
-      quote: "The AI feedback is surprisingly accurate. It caught things I never would have noticed on my own.",
-      author: "Tharindu Silva",
-      role: "Full Stack Developer",
-      rating: 5,
     },
   ];
 
@@ -208,8 +199,8 @@ export default function AboutUs() {
             </h1>
 
             <p className="text-slate-300 text-lg md:text-xl leading-relaxed animate-in fade-in slide-in-from-bottom-5 duration-500 delay-300">
-              We're building the future of interview preparation with AI-powered technology
-              that helps students showcase their true potential.
+              We're building the future of interview preparation with AI-powered
+              technology that helps students showcase their true potential.
             </p>
 
             <div className="flex flex-wrap justify-center gap-4 mt-8 animate-in fade-in slide-in-from-bottom-5 duration-500 delay-500">
@@ -226,8 +217,15 @@ export default function AboutUs() {
 
         {/* Wave Divider */}
         <div className="absolute bottom-0 left-0 right-0">
-          <svg className="w-full h-12 text-white" viewBox="0 0 1200 120" preserveAspectRatio="none">
-            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="currentColor"></path>
+          <svg
+            className="w-full h-12 text-white"
+            viewBox="0 0 1200 120"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"
+              fill="currentColor"
+            ></path>
           </svg>
         </div>
       </section>
@@ -252,13 +250,15 @@ export default function AboutUs() {
               </h2>
 
               <p className="text-slate-500 mb-6 leading-relaxed">
-                DevMock was born from a simple observation: talented IT students were struggling
-                to articulate their technical knowledge during interviews.
+                DevMock was born from a simple observation: talented IT students
+                were struggling to articulate their technical knowledge during
+                interviews.
               </p>
 
               <p className="text-slate-500 mb-8 leading-relaxed">
-                We built DevMock to democratize interview preparation, making it accessible,
-                affordable, and effective for every student worldwide.
+                We built DevMock to democratize interview preparation, making it
+                accessible, affordable, and effective for every student
+                worldwide.
               </p>
 
               <div className="flex flex-wrap gap-4">
@@ -287,7 +287,8 @@ export default function AboutUs() {
                 <Quote className="w-10 h-10 text-cyan-400 mb-6 opacity-50" />
 
                 <p className="text-slate-200 text-xl italic leading-relaxed">
-                  "The only way to do great work is to love what you do. We love helping students succeed."
+                  "The only way to do great work is to love what you do. We love
+                  helping students succeed."
                 </p>
 
                 <div className="flex items-center gap-4 mt-6 pt-4 border-t border-slate-700">
@@ -297,7 +298,9 @@ export default function AboutUs() {
 
                   <div>
                     <p className="text-white font-semibold">DevMock Team</p>
-                    <p className="text-slate-400 text-sm">AI-Powered Interview Platform</p>
+                    <p className="text-slate-400 text-sm">
+                      AI-Powered Interview Platform
+                    </p>
                   </div>
                 </div>
               </div>
@@ -316,7 +319,9 @@ export default function AboutUs() {
                 OUR IMPACT
               </span>
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">By the Numbers</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+              By the Numbers
+            </h2>
             <p className="text-slate-500">Real results from real students</p>
           </div>
 
@@ -438,7 +443,9 @@ export default function AboutUs() {
                   key={index}
                   className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:bg-white/10 transition-all hover:-translate-y-1 group"
                 >
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${milestone.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                  <div
+                    className={`w-12 h-12 rounded-xl bg-gradient-to-br ${milestone.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}
+                  >
                     <Icon className="w-6 h-6 text-white" />
                   </div>
 
@@ -486,8 +493,12 @@ export default function AboutUs() {
                 key={index}
                 className="bg-white rounded-2xl p-8 shadow-xl border border-slate-100 text-center hover:shadow-2xl transition-all hover:-translate-y-1 group"
               >
-                <div className={`w-28 h-28 rounded-full bg-gradient-to-r ${member.color} flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:scale-105 transition-transform`}>
-                  <span className="text-3xl font-bold text-white">{member.initials}</span>
+                <div
+                  className={`w-28 h-28 rounded-full bg-gradient-to-r ${member.color} flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:scale-105 transition-transform`}
+                >
+                  <span className="text-3xl font-bold text-white">
+                    {member.initials}
+                  </span>
                 </div>
 
                 <h3 className="text-xl font-semibold text-slate-800 mb-1">
@@ -504,7 +515,10 @@ export default function AboutUs() {
 
                 <div className="flex flex-wrap justify-center gap-2 mt-4">
                   {member.skills.map((skill, i) => (
-                    <span key={i} className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full">
+                    <span
+                      key={i}
+                      className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full"
+                    >
                       {skill}
                     </span>
                   ))}
@@ -514,8 +528,6 @@ export default function AboutUs() {
           </div>
         </div>
       </section>
-
-      
 
       {/* CTA Section */}
       <section className="py-20">
