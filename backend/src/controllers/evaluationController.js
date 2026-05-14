@@ -8,14 +8,21 @@ export const evaluateAnswer = async (req, res, next) => {
   const startTime = Date.now();
 
   try {
-    const { userAnswer, referenceAnswer, coreKeywords } = req.body;
+    // ✅ FIX: Accept multiple field name variations
+    const userAnswer = req.body.userAnswer || req.body.answer;
+    const referenceAnswer = req.body.referenceAnswer || req.body.modelAnswer;
+    let coreKeywords = req.body.coreKeywords || req.body.keywords || [];
+
+    // ✅ FIX: Ensure coreKeywords is always an array
+    if (!Array.isArray(coreKeywords)) {
+      coreKeywords = [];
+    }
 
     // Input validation
     if (!userAnswer || !referenceAnswer) {
       return res.status(400).json({
         success: false,
-        error:
-          "Missing required fields: userAnswer and referenceAnswer are required",
+        error: "Missing required fields: userAnswer and referenceAnswer are required",
       });
     }
 
@@ -39,10 +46,10 @@ export const evaluateAnswer = async (req, res, next) => {
       } else {
         throw new Error("Groq returned null result");
       }
-    } catch (groqError) {
-      groqError = error;
+    } catch (err) {  // ✅ FIX: Changed 'error' to 'err'
+      groqError = err;  // ✅ FIX: Changed 'error' to 'err'
       console.warn(
-        `⚠️ Groq API failed: ${error.message}. Falling back to local evaluation.`,
+        `⚠️ Groq API failed: ${err.message}. Falling back to local evaluation.`,  // ✅ FIX: Changed 'error' to 'err'
       );
       result = evaluateLocally(userAnswer, referenceAnswer, coreKeywords);
       evaluationMethod = "local_fallback";
@@ -61,8 +68,14 @@ export const evaluateAnswer = async (req, res, next) => {
     };
 
     res.json(response);
-  } catch (error) {
-    console.error("❌ Evaluation error:", error);
-    next(error);
+  } catch (err) {  // ✅ FIX: Changed 'error' to 'err'
+    console.error("❌ Evaluation error:", err);  // ✅ FIX: Changed 'error' to 'err'
+    console.error("Error details:", err.message);
+    
+    res.status(500).json({
+      success: false,
+      error: err.message,  // ✅ FIX: Changed 'error' to 'err'
+      timestamp: new Date().toISOString()
+    });
   }
 };
