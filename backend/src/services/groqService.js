@@ -1,12 +1,12 @@
-import Groq from 'groq-sdk';
-import dotenv from 'dotenv';
+import Groq from "groq-sdk";
+import dotenv from "dotenv";
 
 // Load environment variables
 dotenv.config();
 
 // Debug: Check if API key is loaded
-console.log('GROQ_API_KEY loaded:', process.env.GROQ_API_KEY ? 'Yes' : 'No');
-console.log('API Key length:', process.env.GROQ_API_KEY?.length || 0);
+console.log("GROQ_API_KEY loaded:", process.env.GROQ_API_KEY ? "Yes" : "No");
+console.log("API Key length:", process.env.GROQ_API_KEY?.length || 0);
 
 // Initialize Groq client with explicit API key
 const groq = new Groq({
@@ -22,15 +22,28 @@ const CACHE_TTL = 3600000; // 1 hour
  */
 const isInvalidAnswer = (userAnswer) => {
   if (!userAnswer) return true;
-  
+
   const invalidPhrases = [
-    "i don't know", "i dont know", "i don\'t know", "i do not know",
-    "not sure", "no idea", "i have no idea", "i don't understand",
-    "i cant answer", "i cannot answer", "pass", "skip", "next question",
-    "i'm not sure", "i am not sure", "dont know", "dk"
+    "i don't know",
+    "i dont know",
+    "i don\'t know",
+    "i do not know",
+    "not sure",
+    "no idea",
+    "i have no idea",
+    "i don't understand",
+    "i cant answer",
+    "i cannot answer",
+    "pass",
+    "skip",
+    "next question",
+    "i'm not sure",
+    "i am not sure",
+    "dont know",
+    "dk",
   ];
   const lowerAnswer = userAnswer.toLowerCase();
-  return invalidPhrases.some(phrase => lowerAnswer.includes(phrase));
+  return invalidPhrases.some((phrase) => lowerAnswer.includes(phrase));
 };
 
 /**
@@ -43,21 +56,26 @@ const isAnswerTooShort = (userAnswer) => {
 };
 
 /**
- * ✅ FIX: Ensure keywords are always an array and safe to use
+ * Ensure keywords are always an array and safe to use
  */
 const ensureKeywordsArray = (keywords) => {
   if (!keywords) return [];
   if (Array.isArray(keywords)) return keywords;
-  if (typeof keywords === 'string') return keywords.split(',').map(k => k.trim());
+  if (typeof keywords === "string")
+    return keywords.split(",").map((k) => k.trim());
   return [];
 };
 
 /**
  * Evaluate answer using Groq API
- * ✅ FIX: Updated to match the expected return format from evaluationController
+ * Updated to match the expected return format from evaluationController
  */
-export const evaluateWithGroq = async (userAnswer, referenceAnswer, coreKeywords) => {
-  // ✅ FIX: Ensure coreKeywords is a safe array
+export const evaluateWithGroq = async (
+  userAnswer,
+  referenceAnswer,
+  coreKeywords,
+) => {
+  //Ensure coreKeywords is a safe array
   const safeKeywords = ensureKeywordsArray(coreKeywords);
   const safeUserAnswer = userAnswer || "";
   const safeReferenceAnswer = referenceAnswer || "";
@@ -70,13 +88,16 @@ export const evaluateWithGroq = async (userAnswer, referenceAnswer, coreKeywords
 
   // PRE-CHECK: Invalid answer detection (I don't know)
   if (isInvalidAnswer(safeUserAnswer)) {
-    console.log("Invalid answer detected (I don't know / not sure), returning low score");
+    console.log(
+      "Invalid answer detected (I don't know / not sure), returning low score",
+    );
     return {
       score: 1,
-      feedback: "You indicated you don't know this concept. Please review the material and try again.",
+      feedback:
+        "You indicated you don't know this concept. Please review the material and try again.",
       matchedKeywords: [],
       missingKeywords: safeKeywords,
-      improvementSuggestions: `Study these concepts: ${safeKeywords.join(', ')}. Review the reference answer for better understanding.`,
+      improvementSuggestions: `Study these concepts: ${safeKeywords.join(", ")}. Review the reference answer for better understanding.`,
       status: "fail",
     };
   }
@@ -90,7 +111,7 @@ export const evaluateWithGroq = async (userAnswer, referenceAnswer, coreKeywords
       feedback: "Your answer is too short and lacks sufficient detail.",
       matchedKeywords: [],
       missingKeywords: safeKeywords,
-      improvementSuggestions: `Provide more detailed answers. Include key concepts like: ${topKeywords.join(', ')}.`,
+      improvementSuggestions: `Provide more detailed answers. Include key concepts like: ${topKeywords.join(", ")}.`,
       status: "fail",
     };
   }
@@ -107,10 +128,11 @@ export const evaluateWithGroq = async (userAnswer, referenceAnswer, coreKeywords
       responseCache.delete(cacheKey);
     }
 
-    // ✅ FIX: Safely create keywords string
-    const keywordsString = safeKeywords.length > 0 
-      ? safeKeywords.join(', ') 
-      : "No specific keywords provided";
+    //  Safely create keywords string
+    const keywordsString =
+      safeKeywords.length > 0
+        ? safeKeywords.join(", ")
+        : "No specific keywords provided";
 
     const prompt = `You are an expert technical interviewer. Evaluate the candidate's answer.
 
@@ -147,30 +169,34 @@ Remember:
     console.log("Calling Groq API for evaluation...");
 
     const completion = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",  // ✅ FIX: Updated to latest model
+      model: "llama-3.3-70b-versatile",
       messages: [
         {
           role: "system",
-          content: "You are an expert technical interviewer. Be strict and honest in your evaluation. Return only valid JSON. Score 0-2 for answers that show no understanding or say 'I don't know'. Score 3-4 for vague or incomplete answers. Score 7+ for good answers that cover most key concepts."
+          content:
+            "You are an expert technical interviewer. Be strict and honest in your evaluation. Return only valid JSON. Score 0-2 for answers that show no understanding or say 'I don't know'. Score 3-4 for vague or incomplete answers. Score 7+ for good answers that cover most key concepts.",
         },
         {
           role: "user",
-          content: prompt
-        }
+          content: prompt,
+        },
       ],
       temperature: 0.2,
-      max_tokens: 800,  // ✅ FIX: Increased for better feedback
+      max_tokens: 800, // FIX: Increased for better feedback
     });
 
     const resultText = completion.choices[0]?.message?.content;
-    
+
     if (!resultText) {
       console.error("Empty response from Groq API");
       throw new Error("Empty response from Groq");
     }
-    
-    console.log("Groq response received:", resultText.substring(0, 100) + "...");
-    
+
+    console.log(
+      "Groq response received:",
+      resultText.substring(0, 100) + "...",
+    );
+
     // Parse the JSON response
     let result;
     try {
@@ -186,53 +212,67 @@ Remember:
       throw new Error("Invalid JSON response from Groq");
     }
 
-    // ✅ FIX: Ensure score is within 0-10 range
+    // FIX: Ensure score is within 0-10 range
     let score = result.score || 5;
     score = Math.min(10, Math.max(0, score));
-    
-    // ✅ FIX: Ensure matchedKeywords and missingKeywords are arrays
-    const matchedKeywords = Array.isArray(result.matchedKeywords) 
-      ? result.matchedKeywords 
-      : (result.matched_keywords ? (Array.isArray(result.matched_keywords) ? result.matched_keywords : []) : []);
-    
-    const missingKeywords = Array.isArray(result.missingKeywords) 
-      ? result.missingKeywords 
-      : (result.missing_keywords ? (Array.isArray(result.missing_keywords) ? result.missing_keywords : safeKeywords) : safeKeywords);
-    
+
+    // FIX: Ensure matchedKeywords and missingKeywords are arrays
+    const matchedKeywords = Array.isArray(result.matchedKeywords)
+      ? result.matchedKeywords
+      : result.matched_keywords
+        ? Array.isArray(result.matched_keywords)
+          ? result.matched_keywords
+          : []
+        : [];
+
+    const missingKeywords = Array.isArray(result.missingKeywords)
+      ? result.missingKeywords
+      : result.missing_keywords
+        ? Array.isArray(result.missing_keywords)
+          ? result.missing_keywords
+          : safeKeywords
+        : safeKeywords;
+
     // If score is too high for a poor answer, adjust
     if (score >= 5 && isAnswerTooShort(safeUserAnswer)) {
       score = Math.min(score, 4);
       console.log("Adjusted score down due to short answer");
     }
-    
+
     // Determine status based on score
     const status = score >= 7 ? "pass" : "fail";
-    
-    // ✅ FIX: Build feedback if not provided
+
+    // FIX: Build feedback if not provided
     let feedback = result.feedback || "";
     if (!feedback) {
       if (score >= 9) {
-        feedback = "Excellent answer! You covered all key concepts thoroughly and demonstrated strong understanding.";
+        feedback =
+          "Excellent answer! You covered all key concepts thoroughly and demonstrated strong understanding.";
       } else if (score >= 7) {
-        feedback = "Good answer. You covered most of the important concepts well.";
+        feedback =
+          "Good answer. You covered most of the important concepts well.";
       } else if (score >= 5) {
-        feedback = "Satisfactory answer, but you missed some key concepts. Review the suggestions below.";
+        feedback =
+          "Satisfactory answer, but you missed some key concepts. Review the suggestions below.";
       } else if (score >= 3) {
-        feedback = "Your answer needs improvement. Several key concepts are missing or unclear.";
+        feedback =
+          "Your answer needs improvement. Several key concepts are missing or unclear.";
       } else {
-        feedback = "Your answer does not adequately address the question. Please review the reference answer carefully.";
+        feedback =
+          "Your answer does not adequately address the question. Please review the reference answer carefully.";
       }
     }
-    
-    // ✅ FIX: Build improvement suggestions if not provided
+
+    // FIX: Build improvement suggestions if not provided
     let improvementSuggestions = result.improvementSuggestions || "";
     if (!improvementSuggestions && missingKeywords.length > 0) {
-      improvementSuggestions = `Focus on explaining these concepts: ${missingKeywords.join(', ')}. Review the reference answer for better understanding.`;
+      improvementSuggestions = `Focus on explaining these concepts: ${missingKeywords.join(", ")}. Review the reference answer for better understanding.`;
     } else if (!improvementSuggestions) {
-      improvementSuggestions = "Review the reference answer and try to include more specific technical details in your response.";
+      improvementSuggestions =
+        "Review the reference answer and try to include more specific technical details in your response.";
     }
 
-    // ✅ FIX: Return in the format expected by evaluationController
+    // FIX: Return in the format expected by evaluationController
     const evaluatedResult = {
       score: score,
       feedback: feedback,
@@ -248,12 +288,13 @@ Remember:
       timestamp: Date.now(),
     });
 
-    console.log(`Groq evaluation complete - Score: ${evaluatedResult.score}/10 - Status: ${evaluatedResult.status}`);
+    console.log(
+      `Groq evaluation complete - Score: ${evaluatedResult.score}/10 - Status: ${evaluatedResult.status}`,
+    );
     return evaluatedResult;
-
   } catch (error) {
     console.error("Groq API error:", error.message);
-    return null;  // Return null to trigger fallback to local evaluation
+    return null; // Return null to trigger fallback to local evaluation
   }
 };
 

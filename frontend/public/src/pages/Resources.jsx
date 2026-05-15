@@ -30,12 +30,42 @@ export default function Resources() {
   const [selectedCategory, setSelectedCategory] = useState("all");
 
   const categories = [
-    { id: "all", name: "All Resources", icon: BookOpen, color: "from-blue-500 to-cyan-500" },
-    { id: "guides", name: "Interview Guides", icon: FileText, color: "from-emerald-500 to-teal-500" },
-    { id: "learning", name: "Learning Materials", icon: GraduationCap, color: "from-purple-500 to-pink-500" },
-    { id: "career", name: "Career Development", icon: Briefcase, color: "from-amber-500 to-orange-500" },
-    { id: "tools", name: "Tools & Software", icon: Wrench, color: "from-rose-500 to-red-500" },
-    { id: "community", name: "Community", icon: Users, color: "from-indigo-500 to-blue-500" },
+    {
+      id: "all",
+      name: "All Resources",
+      icon: BookOpen,
+      color: "from-blue-500 to-cyan-500",
+    },
+    {
+      id: "guides",
+      name: "Interview Guides",
+      icon: FileText,
+      color: "from-emerald-500 to-teal-500",
+    },
+    {
+      id: "learning",
+      name: "Learning Materials",
+      icon: GraduationCap,
+      color: "from-purple-500 to-pink-500",
+    },
+    {
+      id: "career",
+      name: "Career Development",
+      icon: Briefcase,
+      color: "from-amber-500 to-orange-500",
+    },
+    {
+      id: "tools",
+      name: "Tools & Software",
+      icon: Wrench,
+      color: "from-rose-500 to-red-500",
+    },
+    {
+      id: "community",
+      name: "Community",
+      icon: Users,
+      color: "from-indigo-500 to-blue-500",
+    },
   ];
 
   // Helper function to render icon
@@ -43,8 +73,8 @@ export default function Resources() {
     // Handle SVG files from public folder
     if (resource.useSvg) {
       return (
-        <img 
-          src={`/${resource.svgName}`} 
+        <img
+          src={`/${resource.svgName}`}
           alt={resource.title}
           className="w-6 h-6 object-contain"
         />
@@ -56,11 +86,12 @@ export default function Resources() {
   };
 
   const resources = [
-    // ==================== INTERVIEW GUIDES ====================
+    // INTERVIEW GUIDES
     {
       id: 1,
       title: "STAR Method Guide for Behavioral Interviews",
-      description: "Learn how to structure your answers using Situation, Task, Action, Result framework. Includes examples and practice templates.",
+      description:
+        "Learn how to structure your answers using Situation, Task, Action, Result framework. Includes examples and practice templates.",
       category: "guides",
       type: "PDF",
       icon: FileText,
@@ -73,7 +104,8 @@ export default function Resources() {
     {
       id: 2,
       title: "Top 100 Technical Interview Questions",
-      description: "Most commonly asked technical questions for Software Engineering roles with answer frameworks and tips.",
+      description:
+        "Most commonly asked technical questions for Software Engineering roles with answer frameworks and tips.",
       category: "guides",
       type: "Article",
       icon: FileText,
@@ -86,7 +118,8 @@ export default function Resources() {
     {
       id: 3,
       title: "System Design Interview Guide",
-      description: "Master system design interviews with proven frameworks, case studies, and architecture patterns.",
+      description:
+        "Master system design interviews with proven frameworks, case studies, and architecture patterns.",
       category: "guides",
       type: "Guide",
       icon: FileText,
@@ -99,7 +132,8 @@ export default function Resources() {
     {
       id: 4,
       title: "Behavioral Interview Questions & Answers",
-      description: "Common behavioral questions with sample answers using the STAR framework.",
+      description:
+        "Common behavioral questions with sample answers using the STAR framework.",
       category: "guides",
       type: "Guide",
       icon: FileText,
@@ -112,7 +146,8 @@ export default function Resources() {
     {
       id: 5,
       title: "LeetCode Patterns for Coding Interviews",
-      description: "Common coding patterns and algorithms to master for technical interviews.",
+      description:
+        "Common coding patterns and algorithms to master for technical interviews.",
       category: "guides",
       type: "Guide",
       icon: Code,
@@ -127,7 +162,8 @@ export default function Resources() {
     {
       id: 6,
       title: "freeCodeCamp - Full Stack Web Development",
-      description: "Free, self-paced coding curriculum covering HTML, CSS, JavaScript, React, Node.js, and MongoDB.",
+      description:
+        "Free, self-paced coding curriculum covering HTML, CSS, JavaScript, React, Node.js, and MongoDB.",
       category: "learning",
       type: "Course",
       icon: Play,
@@ -141,7 +177,8 @@ export default function Resources() {
     {
       id: 7,
       title: "The Odin Project - Full Stack JavaScript",
-      description: "Free, open-source curriculum for learning full-stack web development.",
+      description:
+        "Free, open-source curriculum for learning full-stack web development.",
       category: "learning",
       type: "Course",
       icon: GraduationCap,
@@ -155,7 +192,8 @@ export default function Resources() {
     {
       id: 8,
       title: "CS50 - Harvard University (Free)",
-      description: "Introduction to Computer Science from Harvard University. Covers algorithms, data structures, and web development.",
+      description:
+        "Introduction to Computer Science from Harvard University. Covers algorithms, data structures, and web development.",
       category: "learning",
       type: "Course",
       icon: Play,
@@ -169,7 +207,8 @@ export default function Resources() {
     {
       id: 9,
       title: "MIT OpenCourseWare - Introduction to Algorithms",
-      description: "MIT's undergraduate course on algorithms with video lectures and assignments.",
+      description:
+        "MIT's undergraduate course on algorithms with video lectures and assignments.",
       category: "learning",
       type: "Course",
       icon: GraduationCap,
@@ -183,7 +222,8 @@ export default function Resources() {
     {
       id: 10,
       title: "Roadmap.sh - Developer Roadmaps",
-      description: "Community-driven roadmaps for Frontend, Backend, DevOps, and more.",
+      description:
+        "Community-driven roadmaps for Frontend, Backend, DevOps, and more.",
       category: "learning",
       type: "Guide",
       icon: Target,
@@ -196,7 +236,8 @@ export default function Resources() {
     {
       id: 11,
       title: "YouTube - FreeCodeCamp JavaScript Tutorial",
-      description: "Complete JavaScript tutorial for beginners to advanced concepts.",
+      description:
+        "Complete JavaScript tutorial for beginners to advanced concepts.",
       category: "learning",
       type: "Video",
       useSvg: true,
@@ -209,11 +250,12 @@ export default function Resources() {
       featured: false,
     },
 
-    // CAREER DEVELOPMENT 
+    // CAREER DEVELOPMENT
     {
       id: 12,
       title: "Resume Template for Software Engineers (LaTeX)",
-      description: "ATS-friendly resume template for software engineers with LaTeX source code.",
+      description:
+        "ATS-friendly resume template for software engineers with LaTeX source code.",
       category: "career",
       type: "Template",
       icon: FileCheck,
@@ -227,7 +269,8 @@ export default function Resources() {
     {
       id: 13,
       title: "LinkedIn Profile Optimization Guide",
-      description: "Complete guide to optimizing your LinkedIn profile for recruiters.",
+      description:
+        "Complete guide to optimizing your LinkedIn profile for recruiters.",
       category: "career",
       type: "Guide",
       useSvg: true,
@@ -241,7 +284,8 @@ export default function Resources() {
     {
       id: 14,
       title: "Job Search Strategies for Fresh Graduates",
-      description: "Effective job search techniques, networking tips, and interview preparation strategies.",
+      description:
+        "Effective job search techniques, networking tips, and interview preparation strategies.",
       category: "career",
       type: "Article",
       icon: Target,
@@ -254,7 +298,8 @@ export default function Resources() {
     {
       id: 15,
       title: "Salary Negotiation Guide for Tech Professionals",
-      description: "Learn how to negotiate salary, benefits, and job offers effectively.",
+      description:
+        "Learn how to negotiate salary, benefits, and job offers effectively.",
       category: "career",
       type: "Guide",
       icon: Briefcase,
@@ -269,7 +314,8 @@ export default function Resources() {
     {
       id: 16,
       title: "VS Code Essential Extensions for Developers",
-      description: "Best extensions for productivity: Prettier, ESLint, GitLens, Thunder Client, and more.",
+      description:
+        "Best extensions for productivity: Prettier, ESLint, GitLens, Thunder Client, and more.",
       category: "tools",
       type: "Guide",
       icon: Code,
@@ -282,7 +328,8 @@ export default function Resources() {
     {
       id: 17,
       title: "GitHub - Git Cheat Sheet",
-      description: "Official Git cheat sheet with common commands and workflows.",
+      description:
+        "Official Git cheat sheet with common commands and workflows.",
       category: "tools",
       type: "Guide",
       useSvg: true,
@@ -321,11 +368,12 @@ export default function Resources() {
       featured: false,
     },
 
-    // ==================== COMMUNITY ====================
+    //  COMMUNITY
     {
       id: 20,
       title: "Dev.to - Developer Community",
-      description: "Join the largest developer community for articles, discussions, and networking.",
+      description:
+        "Join the largest developer community for articles, discussions, and networking.",
       category: "community",
       type: "Link",
       icon: Users,
@@ -338,7 +386,8 @@ export default function Resources() {
     {
       id: 21,
       title: "r/cscareerquestions on Reddit",
-      description: "Active community discussing careers, interviews, and job offers in tech.",
+      description:
+        "Active community discussing careers, interviews, and job offers in tech.",
       category: "community",
       type: "Link",
       icon: Globe,
@@ -351,7 +400,8 @@ export default function Resources() {
     {
       id: 22,
       title: "Stack Overflow",
-      description: "Q&A community for programmers. Ask questions and get answers from experts.",
+      description:
+        "Q&A community for programmers. Ask questions and get answers from experts.",
       category: "community",
       type: "Link",
       icon: Globe,
@@ -378,7 +428,8 @@ export default function Resources() {
     {
       id: 24,
       title: "Women Who Code",
-      description: "Global nonprofit dedicated to inspiring women to excel in technology careers.",
+      description:
+        "Global nonprofit dedicated to inspiring women to excel in technology careers.",
       category: "community",
       type: "Link",
       icon: Users,
@@ -400,13 +451,15 @@ export default function Resources() {
   };
 
   const filteredResources = resources.filter((resource) => {
-    const matchesSearch = resource.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         resource.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "all" || resource.category === selectedCategory;
+    const matchesSearch =
+      resource.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      resource.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory =
+      selectedCategory === "all" || resource.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  const featuredResources = resources.filter(r => r.featured);
+  const featuredResources = resources.filter((r) => r.featured);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
@@ -423,17 +476,19 @@ export default function Resources() {
           <div className="text-center max-w-3xl mx-auto">
             <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-full px-4 py-1.5 mb-6">
               <Sparkles className="w-4 h-4 text-blue-600" />
-              <span className="text-xs font-medium text-blue-700">FREE LEARNING RESOURCES</span>
+              <span className="text-xs font-medium text-blue-700">
+                FREE LEARNING RESOURCES
+              </span>
             </div>
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-slate-800 mb-6">
-              Learning{' '}
+              Learning{" "}
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-600">
                 Resources
               </span>
             </h1>
             <p className="text-slate-500 text-lg md:text-xl leading-relaxed">
-              Curated guides, courses, and tools to help you master technical interviews
-              and advance your career in tech.
+              Curated guides, courses, and tools to help you master technical
+              interviews and advance your career in tech.
             </p>
           </div>
         </div>
@@ -444,26 +499,39 @@ export default function Resources() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center gap-2 mb-6">
             <Award className="w-5 h-5 text-amber-500" />
-            <h2 className="text-xl font-semibold text-slate-800">Featured Resources</h2>
+            <h2 className="text-xl font-semibold text-slate-800">
+              Featured Resources
+            </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredResources.map((resource) => {
               return (
-                <div key={resource.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition-all hover:-translate-y-1">
+                <div
+                  key={resource.id}
+                  className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition-all hover:-translate-y-1"
+                >
                   <div className="flex items-start justify-between mb-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl flex items-center justify-center">
                       {renderIcon(resource)}
                     </div>
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${getDifficultyBadge(resource.difficulty)}`}>
+                    <span
+                      className={`text-xs px-2 py-1 rounded-full font-medium ${getDifficultyBadge(resource.difficulty)}`}
+                    >
                       {resource.difficulty}
                     </span>
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-800 mb-2">{resource.title}</h3>
-                  <p className="text-sm text-slate-500 mb-4 line-clamp-2">{resource.description}</p>
+                  <h3 className="text-lg font-semibold text-slate-800 mb-2">
+                    {resource.title}
+                  </h3>
+                  <p className="text-sm text-slate-500 mb-4 line-clamp-2">
+                    {resource.description}
+                  </p>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-xs text-slate-400">
                       <Clock size={12} />
-                      <span>{resource.readTime || resource.duration || "10 min"}</span>
+                      <span>
+                        {resource.readTime || resource.duration || "10 min"}
+                      </span>
                       {resource.type && (
                         <>
                           <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
@@ -535,21 +603,34 @@ export default function Resources() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredResources.map((resource) => {
                 return (
-                  <div key={resource.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition-all hover:-translate-y-1 group">
+                  <div
+                    key={resource.id}
+                    className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition-all hover:-translate-y-1 group"
+                  >
                     <div className="flex items-start justify-between mb-4">
-                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                      <div
+                        className={`w-12 h-12 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center group-hover:scale-110 transition-transform`}
+                      >
                         {renderIcon(resource)}
                       </div>
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${getDifficultyBadge(resource.difficulty)}`}>
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full font-medium ${getDifficultyBadge(resource.difficulty)}`}
+                      >
                         {resource.difficulty}
                       </span>
                     </div>
-                    <h3 className="text-lg font-semibold text-slate-800 mb-2">{resource.title}</h3>
-                    <p className="text-sm text-slate-500 mb-4 line-clamp-2">{resource.description}</p>
+                    <h3 className="text-lg font-semibold text-slate-800 mb-2">
+                      {resource.title}
+                    </h3>
+                    <p className="text-sm text-slate-500 mb-4 line-clamp-2">
+                      {resource.description}
+                    </p>
                     <div className="flex items-center justify-between pt-2 border-t border-slate-100">
                       <div className="flex items-center gap-2 text-xs text-slate-400">
                         <Clock size={12} />
-                        <span>{resource.readTime || resource.duration || "10 min"}</span>
+                        <span>
+                          {resource.readTime || resource.duration || "10 min"}
+                        </span>
                         {resource.type && (
                           <>
                             <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
@@ -580,8 +661,12 @@ export default function Resources() {
           ) : (
             <div className="text-center py-16">
               <div className="text-5xl mb-4 opacity-50">📚</div>
-              <h3 className="text-xl font-semibold text-slate-700 mb-2">No resources found</h3>
-              <p className="text-slate-500">Try adjusting your search or filter criteria</p>
+              <h3 className="text-xl font-semibold text-slate-700 mb-2">
+                No resources found
+              </h3>
+              <p className="text-slate-500">
+                Try adjusting your search or filter criteria
+              </p>
             </div>
           )}
         </div>
@@ -594,9 +679,12 @@ export default function Resources() {
             <div className="absolute inset-0 bg-black/10"></div>
             <div className="relative z-10">
               <Mail className="w-12 h-12 text-white mx-auto mb-4 opacity-80" />
-              <h2 className="text-2xl font-bold text-white mb-2">Stay Updated</h2>
+              <h2 className="text-2xl font-bold text-white mb-2">
+                Stay Updated
+              </h2>
               <p className="text-blue-100 mb-6">
-                Get the latest interview tips and resources delivered to your inbox.
+                Get the latest interview tips and resources delivered to your
+                inbox.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
                 <input
@@ -615,7 +703,5 @@ export default function Resources() {
 
       <Footer />
     </div>
-
-    
   );
 }

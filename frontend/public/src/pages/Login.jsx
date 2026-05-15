@@ -24,13 +24,12 @@ export default function Login() {
       setLoading(true);
       const { data } = await axios.post(
         "http://localhost:3000/api/auth/login",
-        { email, password }
+        { email, password },
       );
 
       localStorage.setItem("userInfo", JSON.stringify(data));
       setLoading(false);
       navigate("/");
-
     } catch (error) {
       setLoading(false);
       setError(error.response?.data?.message || "Login failed");
@@ -46,7 +45,7 @@ export default function Login() {
     try {
       const { data } = await axios.post(
         "http://localhost:3000/api/auth/forgot-password",
-        { email: resetEmail }
+        { email: resetEmail },
       );
       setResetMessage(data.message);
       setTimeout(() => {
@@ -55,7 +54,9 @@ export default function Login() {
         setResetMessage("");
       }, 3000);
     } catch (error) {
-      setResetError(error.response?.data?.message || "Failed to send reset email");
+      setResetError(
+        error.response?.data?.message || "Failed to send reset email",
+      );
     } finally {
       setResetLoading(false);
     }
@@ -71,17 +72,25 @@ export default function Login() {
 
             {/* Login Form */}
             {!showForgotPassword ? (
-              <form onSubmit={submitHandler} className="relative bg-white rounded-2xl shadow-2xl p-8 border border-gray-200">
+              <form
+                onSubmit={submitHandler}
+                className="relative bg-white rounded-2xl shadow-2xl p-8 border border-gray-200"
+              >
                 <div className="flex border-b border-gray-200 mb-8">
                   <button className="flex-1 text-center font-semibold text-blue-600 border-b-2 border-blue-600 pb-3">
                     Log In
                   </button>
-                  <Link to="/register" className="flex-1 text-center font-semibold text-gray-400 hover:text-blue-600 pb-3">
+                  <Link
+                    to="/register"
+                    className="flex-1 text-center font-semibold text-gray-400 hover:text-blue-600 pb-3"
+                  >
                     Sign Up
                   </Link>
                 </div>
 
-                <h2 className="text-3xl font-bold text-center mb-6">Welcome back</h2>
+                <h2 className="text-3xl font-bold text-center mb-6">
+                  Welcome back
+                </h2>
 
                 {error && (
                   <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
@@ -90,7 +99,9 @@ export default function Login() {
                 )}
 
                 <div className="mb-4">
-                  <label className="text-sm font-medium text-gray-700">Email</label>
+                  <label className="text-sm font-medium text-gray-700">
+                    Email
+                  </label>
                   <input
                     type="email"
                     required
@@ -102,7 +113,9 @@ export default function Login() {
                 </div>
 
                 <div className="mb-4">
-                  <label className="text-sm font-medium text-gray-700">Password</label>
+                  <label className="text-sm font-medium text-gray-700">
+                    Password
+                  </label>
                   <input
                     type="password"
                     required
@@ -133,14 +146,20 @@ export default function Login() {
 
                 <p className="text-center mt-6 text-sm text-gray-600">
                   Don't have an account?{" "}
-                  <Link to="/register" className="text-blue-600 font-semibold hover:underline">
+                  <Link
+                    to="/register"
+                    className="text-blue-600 font-semibold hover:underline"
+                  >
                     Sign up
                   </Link>
                 </p>
               </form>
             ) : (
               /* Forgot Password Form */
-              <form onSubmit={handleForgotPassword} className="relative bg-white rounded-2xl shadow-2xl p-8 border border-gray-200">
+              <form
+                onSubmit={handleForgotPassword}
+                className="relative bg-white rounded-2xl shadow-2xl p-8 border border-gray-200"
+              >
                 <button
                   type="button"
                   onClick={() => setShowForgotPassword(false)}
@@ -149,9 +168,12 @@ export default function Login() {
                   ← Back to Login
                 </button>
 
-                <h2 className="text-2xl font-bold text-center mb-2">Reset Password</h2>
+                <h2 className="text-2xl font-bold text-center mb-2">
+                  Reset Password
+                </h2>
                 <p className="text-center text-gray-500 text-sm mb-6">
-                  Enter your email address and we'll send you a link to reset your password.
+                  Enter your email address and we'll send you a link to reset
+                  your password.
                 </p>
 
                 {resetMessage && (
@@ -167,7 +189,9 @@ export default function Login() {
                 )}
 
                 <div className="mb-6">
-                  <label className="text-sm font-medium text-gray-700">Email Address</label>
+                  <label className="text-sm font-medium text-gray-700">
+                    Email Address
+                  </label>
                   <input
                     type="email"
                     required

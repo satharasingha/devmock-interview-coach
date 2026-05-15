@@ -35,13 +35,12 @@ export default function Register() {
       setLoading(true);
       const { data } = await axios.post(
         "http://localhost:3000/api/auth/register",
-        { fullName, email, password }
+        { fullName, email, password },
       );
 
       localStorage.setItem("userInfo", JSON.stringify(data));
       setLoading(false);
       navigate("/");
-
     } catch (error) {
       setLoading(false);
       setError(error.response?.data?.message || "Registration failed");
@@ -56,8 +55,13 @@ export default function Register() {
           <div className="w-full max-w-md relative group">
             <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-2xl blur-xl opacity-20"></div>
 
-            <form onSubmit={submitHandler} className="relative bg-white rounded-2xl shadow-2xl p-8 border border-gray-200">
-              <h2 className="text-3xl font-bold text-center mb-6">Create Account</h2>
+            <form
+              onSubmit={submitHandler}
+              className="relative bg-white rounded-2xl shadow-2xl p-8 border border-gray-200"
+            >
+              <h2 className="text-3xl font-bold text-center mb-6">
+                Create Account
+              </h2>
 
               {error && (
                 <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
@@ -67,7 +71,9 @@ export default function Register() {
 
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-700">First Name *</label>
+                  <label className="text-sm font-medium text-gray-700">
+                    First Name *
+                  </label>
                   <input
                     type="text"
                     required
@@ -78,7 +84,9 @@ export default function Register() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Last Name</label>
+                  <label className="text-sm font-medium text-gray-700">
+                    Last Name
+                  </label>
                   <input
                     type="text"
                     value={lastName}
@@ -90,7 +98,9 @@ export default function Register() {
               </div>
 
               <div className="mb-4">
-                <label className="text-sm font-medium text-gray-700">Email *</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Email *
+                </label>
                 <input
                   type="email"
                   required
@@ -102,7 +112,9 @@ export default function Register() {
               </div>
 
               <div className="mb-4">
-                <label className="text-sm font-medium text-gray-700">Password *</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Password *
+                </label>
                 <input
                   type="password"
                   required
@@ -114,7 +126,9 @@ export default function Register() {
               </div>
 
               <div className="mb-6">
-                <label className="text-sm font-medium text-gray-700">Confirm Password *</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Confirm Password *
+                </label>
                 <input
                   type="password"
                   required
@@ -135,7 +149,10 @@ export default function Register() {
 
               <p className="text-center mt-6 text-sm text-gray-600">
                 Already have an account?{" "}
-                <Link to="/login" className="text-blue-600 font-semibold hover:underline">
+                <Link
+                  to="/login"
+                  className="text-blue-600 font-semibold hover:underline"
+                >
                   Log In
                 </Link>
               </p>

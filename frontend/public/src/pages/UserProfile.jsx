@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { 
-  User, 
-  Mail, 
-  Calendar, 
-  Clock, 
-  Award, 
+import {
+  User,
+  Mail,
+  Calendar,
+  Clock,
+  Award,
   TrendingUp,
   CheckCircle,
   XCircle,
@@ -23,7 +23,7 @@ import {
   Zap,
   Users as UsersIcon,
   FileText,
-  Star
+  Star,
 } from "lucide-react";
 
 export default function Profile() {
@@ -80,20 +80,25 @@ export default function Profile() {
   const fetchInterviewHistory = async () => {
     try {
       const token = JSON.parse(localStorage.getItem("userInfo"))?.token;
-      const response = await fetch("http://localhost:3000/api/auth/interview/history", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await fetch(
+        "http://localhost:3000/api/auth/interview/history",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
 
       if (response.ok) {
         const data = await response.json();
         setInterviews(data.interviews || []);
-        setStats(data.stats || {
-          totalInterviews: 0,
-          averageScore: 0,
-          passedCount: 0,
-          failedCount: 0,
-          totalDuration: 0,
-        });
+        setStats(
+          data.stats || {
+            totalInterviews: 0,
+            averageScore: 0,
+            passedCount: 0,
+            failedCount: 0,
+            totalDuration: 0,
+          },
+        );
       }
     } catch (error) {
       console.error("Error fetching interview history:", error);
@@ -121,7 +126,11 @@ export default function Profile() {
       const data = await response.json();
 
       if (response.ok) {
-        setUser({ ...user, fullName: formData.fullName, email: formData.email });
+        setUser({
+          ...user,
+          fullName: formData.fullName,
+          email: formData.email,
+        });
         const userInfo = JSON.parse(localStorage.getItem("userInfo"));
         userInfo.user.fullName = formData.fullName;
         userInfo.user.email = formData.email;
@@ -130,7 +139,10 @@ export default function Profile() {
         setEditing(false);
         setTimeout(() => setMessage({ type: "", text: "" }), 3000);
       } else {
-        setMessage({ type: "error", text: data.message || "Failed to update profile" });
+        setMessage({
+          type: "error",
+          text: data.message || "Failed to update profile",
+        });
       }
     } catch (error) {
       setMessage({ type: "error", text: "Server error. Please try again." });
@@ -181,7 +193,9 @@ export default function Profile() {
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-slate-800">Your Profile</h1>
-            <p className="text-slate-500 mt-1">Manage your account and track your interview progress</p>
+            <p className="text-slate-500 mt-1">
+              Manage your account and track your interview progress
+            </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -190,7 +204,7 @@ export default function Profile() {
               <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden sticky top-24">
                 {/* Cover Image Area */}
                 <div className="h-24 bg-gradient-to-r from-blue-600 to-cyan-600"></div>
-                
+
                 <div className="px-6 pb-6">
                   {/* Avatar */}
                   <div className="flex justify-center -mt-12 mb-4">
@@ -206,11 +220,18 @@ export default function Profile() {
                   {!editing ? (
                     <>
                       <div className="text-center">
-                        <h2 className="text-xl font-semibold text-slate-800">{user?.fullName}</h2>
-                        <p className="text-slate-500 text-sm mt-1">{user?.email}</p>
+                        <h2 className="text-xl font-semibold text-slate-800">
+                          {user?.fullName}
+                        </h2>
+                        <p className="text-slate-500 text-sm mt-1">
+                          {user?.email}
+                        </p>
                         <div className="flex items-center justify-center gap-2 text-xs text-slate-400 mt-3">
                           <Calendar size={12} />
-                          <span>Joined {new Date(user?.createdAt).toLocaleDateString()}</span>
+                          <span>
+                            Joined{" "}
+                            {new Date(user?.createdAt).toLocaleDateString()}
+                          </span>
                         </div>
                       </div>
 
@@ -227,31 +248,44 @@ export default function Profile() {
                   ) : (
                     <form onSubmit={handleUpdateProfile} className="mt-4">
                       {message.text && (
-                        <div className={`mb-4 p-3 rounded-xl text-sm ${
-                          message.type === "success" 
-                            ? "bg-emerald-50 text-emerald-700" 
-                            : "bg-rose-50 text-rose-700"
-                        }`}>
+                        <div
+                          className={`mb-4 p-3 rounded-xl text-sm ${
+                            message.type === "success"
+                              ? "bg-emerald-50 text-emerald-700"
+                              : "bg-rose-50 text-rose-700"
+                          }`}
+                        >
                           {message.text}
                         </div>
                       )}
                       <div className="mb-4">
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                          Full Name
+                        </label>
                         <input
                           type="text"
                           required
                           value={formData.fullName}
-                          onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              fullName: e.target.value,
+                            })
+                          }
                           className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                         />
                       </div>
                       <div className="mb-4">
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                          Email
+                        </label>
                         <input
                           type="email"
                           required
                           value={formData.email}
-                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          onChange={(e) =>
+                            setFormData({ ...formData, email: e.target.value })
+                          }
                           className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                         />
                       </div>
@@ -261,13 +295,22 @@ export default function Profile() {
                           disabled={updating}
                           className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl hover:shadow-md transition disabled:opacity-50"
                         >
-                          {updating ? "Saving..." : <><Save size={16} /> Save</>}
+                          {updating ? (
+                            "Saving..."
+                          ) : (
+                            <>
+                              <Save size={16} /> Save
+                            </>
+                          )}
                         </button>
                         <button
                           type="button"
                           onClick={() => {
                             setEditing(false);
-                            setFormData({ fullName: user?.fullName, email: user?.email });
+                            setFormData({
+                              fullName: user?.fullName,
+                              email: user?.email,
+                            });
                             setMessage({ type: "", text: "" });
                           }}
                           className="px-4 py-2.5 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 transition"
@@ -289,35 +332,45 @@ export default function Profile() {
                   <div className="flex items-center gap-2 text-blue-600 mb-2">
                     <Briefcase size={18} />
                   </div>
-                  <p className="text-2xl font-bold text-slate-800">{stats.totalInterviews}</p>
+                  <p className="text-2xl font-bold text-slate-800">
+                    {stats.totalInterviews}
+                  </p>
                   <p className="text-xs text-slate-500">Total Interviews</p>
                 </div>
                 <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
                   <div className="flex items-center gap-2 text-emerald-600 mb-2">
                     <Star size={18} />
                   </div>
-                  <p className="text-2xl font-bold text-slate-800">{stats.averageScore}%</p>
+                  <p className="text-2xl font-bold text-slate-800">
+                    {stats.averageScore}%
+                  </p>
                   <p className="text-xs text-slate-500">Average Score</p>
                 </div>
                 <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
                   <div className="flex items-center gap-2 text-emerald-600 mb-2">
                     <CheckCircle size={18} />
                   </div>
-                  <p className="text-2xl font-bold text-slate-800">{stats.passedCount}</p>
+                  <p className="text-2xl font-bold text-slate-800">
+                    {stats.passedCount}
+                  </p>
                   <p className="text-xs text-slate-500">Passed</p>
                 </div>
                 <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
                   <div className="flex items-center gap-2 text-rose-600 mb-2">
                     <XCircle size={18} />
                   </div>
-                  <p className="text-2xl font-bold text-slate-800">{stats.failedCount}</p>
+                  <p className="text-2xl font-bold text-slate-800">
+                    {stats.failedCount}
+                  </p>
                   <p className="text-xs text-slate-500">Failed</p>
                 </div>
                 <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
                   <div className="flex items-center gap-2 text-purple-600 mb-2">
                     <Clock size={18} />
                   </div>
-                  <p className="text-2xl font-bold text-slate-800">{stats.totalDuration}</p>
+                  <p className="text-2xl font-bold text-slate-800">
+                    {stats.totalDuration}
+                  </p>
                   <p className="text-xs text-slate-500">Minutes Practiced</p>
                 </div>
               </div>
@@ -355,8 +408,12 @@ export default function Profile() {
                         <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                           <Briefcase className="w-10 h-10 text-slate-400" />
                         </div>
-                        <h3 className="text-lg font-medium text-slate-800 mb-2">No interviews yet</h3>
-                        <p className="text-slate-500 mb-6">Start practicing to build your interview history</p>
+                        <h3 className="text-lg font-medium text-slate-800 mb-2">
+                          No interviews yet
+                        </h3>
+                        <p className="text-slate-500 mb-6">
+                          Start practicing to build your interview history
+                        </p>
                         <button
                           onClick={() => navigate("/interviewlibrary")}
                           className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl hover:shadow-md transition"
@@ -374,52 +431,88 @@ export default function Profile() {
                           >
                             <div className="flex flex-wrap items-start justify-between gap-3">
                               <div className="flex items-start gap-3">
-                                <div className={`w-10 h-10 rounded-xl ${getScoreBgColor(interview.score)} flex items-center justify-center`}>
-                                  <Target size={18} className={getScoreColor(interview.score)} />
+                                <div
+                                  className={`w-10 h-10 rounded-xl ${getScoreBgColor(interview.score)} flex items-center justify-center`}
+                                >
+                                  <Target
+                                    size={18}
+                                    className={getScoreColor(interview.score)}
+                                  />
                                 </div>
                                 <div>
-                                  <h3 className="font-semibold text-slate-800">{interview.role}</h3>
+                                  <h3 className="font-semibold text-slate-800">
+                                    {interview.role}
+                                  </h3>
                                   <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 mt-1">
                                     <div className="flex items-center gap-1">
                                       <Calendar size={12} />
-                                      <span>{new Date(interview.date).toLocaleDateString()}</span>
+                                      <span>
+                                        {new Date(
+                                          interview.date,
+                                        ).toLocaleDateString()}
+                                      </span>
                                     </div>
                                     <div className="flex items-center gap-1">
                                       <Clock size={12} />
-                                      <span>{formatDuration(interview.duration)}</span>
+                                      <span>
+                                        {formatDuration(interview.duration)}
+                                      </span>
                                     </div>
                                     <div className="flex items-center gap-1">
                                       <FileText size={12} />
-                                      <span>{interview.answers?.length || 0} questions</span>
+                                      <span>
+                                        {interview.answers?.length || 0}{" "}
+                                        questions
+                                      </span>
                                     </div>
                                   </div>
                                 </div>
                               </div>
                               <div className="flex items-center gap-3">
-                                <div className={`px-3 py-1 rounded-full text-sm font-semibold ${getScoreBgColor(interview.score)} ${getScoreColor(interview.score)}`}>
+                                <div
+                                  className={`px-3 py-1 rounded-full text-sm font-semibold ${getScoreBgColor(interview.score)} ${getScoreColor(interview.score)}`}
+                                >
                                   {interview.score}/100
                                 </div>
-                                <span className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${
-                                  interview.passed 
-                                    ? "bg-emerald-50 text-emerald-600" 
-                                    : "bg-rose-50 text-rose-600"
-                                }`}>
-                                  {interview.passed ? <CheckCircle size={12} /> : <XCircle size={12} />}
+                                <span
+                                  className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${
+                                    interview.passed
+                                      ? "bg-emerald-50 text-emerald-600"
+                                      : "bg-rose-50 text-rose-600"
+                                  }`}
+                                >
+                                  {interview.passed ? (
+                                    <CheckCircle size={12} />
+                                  ) : (
+                                    <XCircle size={12} />
+                                  )}
                                   {interview.passed ? "Passed" : "Failed"}
                                 </span>
                               </div>
                             </div>
-                            
+
                             {/* Feedback Preview */}
-                            {(interview.feedback?.strengths?.length > 0 || interview.feedback?.improvements?.length > 0) && (
+                            {(interview.feedback?.strengths?.length > 0 ||
+                              interview.feedback?.improvements?.length > 0) && (
                               <div className="mt-3 pt-3 border-t border-slate-100">
                                 <div className="flex flex-wrap gap-4 text-xs">
-                                  {interview.feedback.strengths?.slice(0, 1).map((s, i) => (
-                                    <span key={i} className="text-emerald-600">✓ {s}</span>
-                                  ))}
-                                  {interview.feedback.improvements?.slice(0, 1).map((imp, i) => (
-                                    <span key={i} className="text-amber-600">⚠ {imp}</span>
-                                  ))}
+                                  {interview.feedback.strengths
+                                    ?.slice(0, 1)
+                                    .map((s, i) => (
+                                      <span
+                                        key={i}
+                                        className="text-emerald-600"
+                                      >
+                                        ✓ {s}
+                                      </span>
+                                    ))}
+                                  {interview.feedback.improvements
+                                    ?.slice(0, 1)
+                                    .map((imp, i) => (
+                                      <span key={i} className="text-amber-600">
+                                        ⚠ {imp}
+                                      </span>
+                                    ))}
                                 </div>
                               </div>
                             )}
@@ -436,37 +529,71 @@ export default function Profile() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* Score Progress */}
                       <div className="bg-slate-50 rounded-xl p-5">
-                        <h3 className="font-medium text-slate-800 mb-3">Score Trend</h3>
+                        <h3 className="font-medium text-slate-800 mb-3">
+                          Score Trend
+                        </h3>
                         <div className="space-y-3">
-                          {interviews.slice(0, 5).reverse().map((interview, idx) => (
-                            <div key={idx}>
-                              <div className="flex justify-between text-xs text-slate-600 mb-1">
-                                <span>{new Date(interview.date).toLocaleDateString()}</span>
-                                <span className="font-medium">{interview.score}%</span>
+                          {interviews
+                            .slice(0, 5)
+                            .reverse()
+                            .map((interview, idx) => (
+                              <div key={idx}>
+                                <div className="flex justify-between text-xs text-slate-600 mb-1">
+                                  <span>
+                                    {new Date(
+                                      interview.date,
+                                    ).toLocaleDateString()}
+                                  </span>
+                                  <span className="font-medium">
+                                    {interview.score}%
+                                  </span>
+                                </div>
+                                <div className="w-full bg-slate-200 rounded-full h-2">
+                                  <div
+                                    className={`h-2 rounded-full ${getScoreBgColor(interview.score)}`}
+                                    style={{
+                                      width: `${interview.score}%`,
+                                      backgroundColor:
+                                        interview.score >= 70
+                                          ? "#10b981"
+                                          : interview.score >= 50
+                                            ? "#f59e0b"
+                                            : "#ef4444",
+                                    }}
+                                  />
+                                </div>
                               </div>
-                              <div className="w-full bg-slate-200 rounded-full h-2">
-                                <div 
-                                  className={`h-2 rounded-full ${getScoreBgColor(interview.score)}`}
-                                  style={{ width: `${interview.score}%`, backgroundColor: interview.score >= 70 ? '#10b981' : interview.score >= 50 ? '#f59e0b' : '#ef4444' }}
-                                />
-                              </div>
-                            </div>
-                          ))}
+                            ))}
                         </div>
                       </div>
 
                       {/* Top Strengths */}
                       <div className="bg-slate-50 rounded-xl p-5">
-                        <h3 className="font-medium text-slate-800 mb-3">Top Strengths</h3>
+                        <h3 className="font-medium text-slate-800 mb-3">
+                          Top Strengths
+                        </h3>
                         <div className="space-y-2">
-                          {interviews.flatMap(i => i.feedback?.strengths || []).slice(0, 5).map((s, i) => (
-                            <div key={i} className="flex items-center gap-2 text-sm text-slate-600">
-                              <CheckCircle size={14} className="text-emerald-500" />
-                              <span>{s}</span>
-                            </div>
-                          ))}
-                          {interviews.flatMap(i => i.feedback?.strengths || []).length === 0 && (
-                            <p className="text-slate-500 text-sm">Complete more interviews to see insights</p>
+                          {interviews
+                            .flatMap((i) => i.feedback?.strengths || [])
+                            .slice(0, 5)
+                            .map((s, i) => (
+                              <div
+                                key={i}
+                                className="flex items-center gap-2 text-sm text-slate-600"
+                              >
+                                <CheckCircle
+                                  size={14}
+                                  className="text-emerald-500"
+                                />
+                                <span>{s}</span>
+                              </div>
+                            ))}
+                          {interviews.flatMap(
+                            (i) => i.feedback?.strengths || [],
+                          ).length === 0 && (
+                            <p className="text-slate-500 text-sm">
+                              Complete more interviews to see insights
+                            </p>
                           )}
                         </div>
                       </div>
@@ -477,7 +604,9 @@ export default function Profile() {
                 {selectedTab === "insights" && interviews.length === 0 && (
                   <div className="p-12 text-center">
                     <BarChart className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                    <p className="text-slate-500">Complete an interview to see your performance insights</p>
+                    <p className="text-slate-500">
+                      Complete an interview to see your performance insights
+                    </p>
                     <button
                       onClick={() => navigate("/interviewlibrary")}
                       className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl hover:shadow-md transition"

@@ -19,7 +19,9 @@ export default function ResetPassword() {
   useEffect(() => {
     const verifyToken = async () => {
       try {
-        await axios.get(`http://localhost:3000/api/auth/verify-reset-token/${token}`);
+        await axios.get(
+          `http://localhost:3000/api/auth/verify-reset-token/${token}`,
+        );
       } catch (error) {
         setIsValidToken(false);
         setError("Invalid or expired reset link. Please request a new one.");
@@ -48,7 +50,7 @@ export default function ResetPassword() {
     try {
       const { data } = await axios.post(
         `http://localhost:3000/api/auth/reset-password/${token}`,
-        { password }
+        { password },
       );
       setMessage(data.message);
       setTimeout(() => {
@@ -71,7 +73,9 @@ export default function ResetPassword() {
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <AlertCircle className="w-8 h-8 text-red-600" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Invalid Reset Link</h2>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                Invalid Reset Link
+              </h2>
               <p className="text-gray-500 mb-6">{error}</p>
               <Link
                 to="/login"
@@ -95,8 +99,13 @@ export default function ResetPassword() {
           <div className="w-full max-w-md relative group">
             <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-2xl blur-xl opacity-20"></div>
 
-            <form onSubmit={handleSubmit} className="relative bg-white rounded-2xl shadow-2xl p-8 border border-gray-200">
-              <h2 className="text-2xl font-bold text-center mb-2">Create New Password</h2>
+            <form
+              onSubmit={handleSubmit}
+              className="relative bg-white rounded-2xl shadow-2xl p-8 border border-gray-200"
+            >
+              <h2 className="text-2xl font-bold text-center mb-2">
+                Create New Password
+              </h2>
               <p className="text-center text-gray-500 text-sm mb-6">
                 Enter your new password below
               </p>
@@ -115,7 +124,9 @@ export default function ResetPassword() {
               )}
 
               <div className="mb-4">
-                <label className="text-sm font-medium text-gray-700">New Password</label>
+                <label className="text-sm font-medium text-gray-700">
+                  New Password
+                </label>
                 <input
                   type="password"
                   required
@@ -127,7 +138,9 @@ export default function ResetPassword() {
               </div>
 
               <div className="mb-6">
-                <label className="text-sm font-medium text-gray-700">Confirm Password</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Confirm Password
+                </label>
                 <input
                   type="password"
                   required
@@ -148,7 +161,10 @@ export default function ResetPassword() {
 
               <p className="text-center mt-6 text-sm text-gray-600">
                 Remember your password?{" "}
-                <Link to="/login" className="text-blue-600 font-semibold hover:underline">
+                <Link
+                  to="/login"
+                  className="text-blue-600 font-semibold hover:underline"
+                >
                   Back to Login
                 </Link>
               </p>

@@ -14,7 +14,7 @@ const correctTranscript = async (text, context) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text, context }),
     });
-    
+
     if (response.ok) {
       const data = await response.json();
       return data.corrected;
@@ -28,30 +28,30 @@ const correctTranscript = async (text, context) => {
 // Quick local correction (as fallback)
 const quickLocalCorrect = (text) => {
   const corrections = {
-    'froent': 'frontend',
-    'fro-end': 'frontend',
-    'frond': 'frontend',
-    'fontend': 'frontend',
-    'back': 'backend',
-    'back-end': 'backend',
-    'bacend': 'backend',
-    'reack': 'React',
-    'reacted': 'React',
-    'reac': 'React',
-    'javashit': 'JavaScript',
-    'java script': 'JavaScript',
-    'type script': 'TypeScript',
-    'typescript': 'TypeScript',
-    'nodejs': 'Node.js',
-    'expressjs': 'Express.js',
-    'mongodb': 'MongoDB',
-    'postgresql': 'PostgreSQL',
-    'mysql': 'MySQL',
+    froent: "frontend",
+    "fro-end": "frontend",
+    frond: "frontend",
+    fontend: "frontend",
+    back: "backend",
+    "back-end": "backend",
+    bacend: "backend",
+    reack: "React",
+    reacted: "React",
+    reac: "React",
+    javashit: "JavaScript",
+    "java script": "JavaScript",
+    "type script": "TypeScript",
+    typescript: "TypeScript",
+    nodejs: "Node.js",
+    expressjs: "Express.js",
+    mongodb: "MongoDB",
+    postgresql: "PostgreSQL",
+    mysql: "MySQL",
   };
-  
+
   let corrected = text;
   for (const [wrong, correct] of Object.entries(corrections)) {
-    const regex = new RegExp(`\\b${wrong}\\b`, 'gi');
+    const regex = new RegExp(`\\b${wrong}\\b`, "gi");
     corrected = corrected.replace(regex, correct);
   }
   return corrected;
@@ -86,7 +86,7 @@ export default function LiveInterview() {
   const [permissionDenied, setPermissionDenied] = useState(false);
   const [isCorrecting, setIsCorrecting] = useState(false);
   const [pendingCorrection, setPendingCorrection] = useState(null);
-  
+
   // Store ALL answers for the session
   const [allAnswers, setAllAnswers] = useState([]);
   const [isReviewMode, setIsReviewMode] = useState(false);
@@ -101,7 +101,11 @@ export default function LiveInterview() {
     eyeContactWarning,
     postureWarning,
     faceDetected,
-  } = useMediaPipeTracking(videoRef, canvasRef, isSessionActive && cameraEnabled);
+  } = useMediaPipeTracking(
+    videoRef,
+    canvasRef,
+    isSessionActive && cameraEnabled,
+  );
 
   const [sessionStats, setSessionStats] = useState({
     duration: 0,
@@ -117,7 +121,17 @@ export default function LiveInterview() {
   };
 
   const countFillerWords = (text) => {
-    const fillerWords = ["um", "uh", "like", "actually", "basically", "literally", "you know", "sort of", "kind of"];
+    const fillerWords = [
+      "um",
+      "uh",
+      "like",
+      "actually",
+      "basically",
+      "literally",
+      "you know",
+      "sort of",
+      "kind of",
+    ];
     const lowerText = text.toLowerCase();
     let count = 0;
     fillerWords.forEach((word) => {
@@ -131,41 +145,44 @@ export default function LiveInterview() {
   // Save all answers to database at once
   const saveAllAnswersToHistory = async () => {
     if (answersSaved) return;
-    
+
     try {
       const userInfo = JSON.parse(localStorage.getItem("userInfo"));
       const token = userInfo?.token;
-      
+
       if (!token) {
         console.log("No token found, skipping save");
         return false;
       }
-      
+
       const totalScore = allAnswers.reduce((sum, ans) => sum + ans.score, 0);
       const avgScore = Math.round(totalScore / allAnswers.length);
       const passed = avgScore >= 60;
-      const allStrengths = allAnswers.flatMap(a => a.strengths || []);
-      const allImprovements = allAnswers.flatMap(a => a.improvements || []);
-      
-      const response = await fetch("http://localhost:3000/api/auth/interview/save", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          role: role?.replace(/%20/g, " "),
-          score: avgScore,
-          duration: sessionStats.duration,
-          passed: passed,
-          answers: allAnswers,
-          feedback: {
-            strengths: [...new Set(allStrengths)].slice(0, 5),
-            improvements: [...new Set(allImprovements)].slice(0, 5),
+      const allStrengths = allAnswers.flatMap((a) => a.strengths || []);
+      const allImprovements = allAnswers.flatMap((a) => a.improvements || []);
+
+      const response = await fetch(
+        "http://localhost:3000/api/auth/interview/save",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-        }),
-      });
-      
+          body: JSON.stringify({
+            role: role?.replace(/%20/g, " "),
+            score: avgScore,
+            duration: sessionStats.duration,
+            passed: passed,
+            answers: allAnswers,
+            feedback: {
+              strengths: [...new Set(allStrengths)].slice(0, 5),
+              improvements: [...new Set(allImprovements)].slice(0, 5),
+            },
+          }),
+        },
+      );
+
       if (response.ok) {
         console.log("✅ All answers saved to history");
         setAnswersSaved(true);
@@ -184,26 +201,33 @@ export default function LiveInterview() {
       alert("Please answer all questions before submitting");
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
     const saved = await saveAllAnswersToHistory();
-    
+
     if (saved) {
       const totalScore = allAnswers.reduce((sum, ans) => sum + ans.score, 0);
       const avgScore = Math.round(totalScore / allAnswers.length);
       const passed = avgScore >= 60;
-      const allStrengths = allAnswers.flatMap(a => a.strengths || []);
-      const allImprovements = allAnswers.flatMap(a => a.improvements || []);
-      
+      const allStrengths = allAnswers.flatMap((a) => a.strengths || []);
+      const allImprovements = allAnswers.flatMap((a) => a.improvements || []);
+
       navigate("/feedback", {
         state: {
-          date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+          date: new Date().toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          }),
           duration: formatTime(sessionStats.duration),
           topic: role,
           score: avgScore,
           relevance: 85,
-          fluency: Math.max(0, Math.min(100, 100 - sessionStats.fillerWords * 2)),
+          fluency: Math.max(
+            0,
+            Math.min(100, 100 - sessionStats.fillerWords * 2),
+          ),
           structure: 75,
           fillerWords: sessionStats.fillerWords,
           strengths: [...new Set(allStrengths)].slice(0, 5),
@@ -215,7 +239,7 @@ export default function LiveInterview() {
     } else {
       alert("Error saving interview results. Please try again.");
     }
-    
+
     setIsSubmitting(false);
   };
 
@@ -236,7 +260,11 @@ export default function LiveInterview() {
       }
 
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: "user",
+        },
         audio: false,
       });
 
@@ -249,9 +277,14 @@ export default function LiveInterview() {
       }
     } catch (err) {
       console.error("Camera error:", err);
-      if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+      if (
+        err.name === "NotAllowedError" ||
+        err.name === "PermissionDeniedError"
+      ) {
         setPermissionDenied(true);
-        setCameraError("Camera permission denied. Please allow camera access and refresh.");
+        setCameraError(
+          "Camera permission denied. Please allow camera access and refresh.",
+        );
       } else if (err.name === "NotFoundError") {
         setCameraError("No camera found on this device");
       } else {
@@ -297,17 +330,26 @@ export default function LiveInterview() {
 
   useEffect(() => {
     const cleanTranscript = transcript.replace(/\s*\[.*?\]\s*/g, "");
-    const words = cleanTranscript.split(/\s+/).filter((w) => w.length > 0).length;
+    const words = cleanTranscript
+      .split(/\s+/)
+      .filter((w) => w.length > 0).length;
     const fillerCount = countFillerWords(cleanTranscript);
-    setSessionStats((prev) => ({ ...prev, wordsSpoken: words, fillerWords: fillerCount }));
+    setSessionStats((prev) => ({
+      ...prev,
+      wordsSpoken: words,
+      fillerWords: fillerCount,
+    }));
   }, [transcript]);
 
   // Speech Recognition
   const startListening = () => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      alert("Speech recognition not supported. Please use Chrome, Edge, or Safari.");
+      alert(
+        "Speech recognition not supported. Please use Chrome, Edge, or Safari.",
+      );
       return;
     }
 
@@ -322,7 +364,7 @@ export default function LiveInterview() {
       setListening(true);
       console.log("Listening...");
     };
-    
+
     recognition.onend = () => {
       setListening(false);
       console.log("Stopped listening");
@@ -360,12 +402,12 @@ export default function LiveInterview() {
             const context = `Question: ${question?.question || "technical interview"} - Role: ${role}`;
             let corrected = await correctTranscript(finalSegment, context);
             corrected = quickLocalCorrect(corrected);
-            
+
             setTranscript((prev) => {
               const base = prev.replace(/\s*\[.*?\]\s*$/, "");
               return base + corrected + " ";
             });
-            
+
             setIsCorrecting(false);
             setPendingCorrection(null);
           } catch (error) {
@@ -410,7 +452,9 @@ export default function LiveInterview() {
       return;
     }
 
-    const cleanTranscript = transcript.replace(/\s*\[.*?\]\s*/g, "").replace(/\s*groq\.\.\.\s*/g, "");
+    const cleanTranscript = transcript
+      .replace(/\s*\[.*?\]\s*/g, "")
+      .replace(/\s*groq\.\.\.\s*/g, "");
     setLoading(true);
 
     try {
@@ -421,11 +465,15 @@ export default function LiveInterview() {
         keywords = question.core_keywords.split(";");
       }
 
-      const result = await evaluateAnswerAPI(cleanTranscript, question.ideal_answer, keywords);
+      const result = await evaluateAnswerAPI(
+        cleanTranscript,
+        question.ideal_answer,
+        keywords,
+      );
 
       const finalScore = result.final_score * 10;
       const questionTimestamp = Math.max(0, sessionStats.duration - 45);
-      
+
       const answerData = {
         question: question.question,
         userAnswer: cleanTranscript,
@@ -436,20 +484,20 @@ export default function LiveInterview() {
         strengths: result.strengths || [],
         improvements: result.improvements || [],
       };
-      
-      setAllAnswers(prev => {
+
+      setAllAnswers((prev) => {
         const newAnswers = [...prev];
         newAnswers[index] = answerData;
         return newAnswers;
       });
-      
+
       console.log(`Answer ${index + 1}/${total} saved. Score: ${finalScore}`);
-      
+
       // Clear transcript for next question
       setTranscript("");
       setPendingCorrection(null);
       setInterimTranscript("");
-      
+
       // Move to next question
       if (index + 1 < total) {
         nextQuestion();
@@ -457,7 +505,6 @@ export default function LiveInterview() {
         // All questions answered, show review mode
         setIsReviewMode(true);
       }
-      
     } catch (err) {
       console.error("Evaluation failed:", err);
       alert("Error evaluating answer. Please try again.");
@@ -483,7 +530,9 @@ export default function LiveInterview() {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600 font-medium">Loading interview questions...</p>
+            <p className="text-gray-600 font-medium">
+              Loading interview questions...
+            </p>
           </div>
         </div>
         <Footer />
@@ -498,9 +547,14 @@ export default function LiveInterview() {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center max-w-md mx-auto px-4">
             <div className="text-6xl mb-4">⚠️</div>
-            <h2 className="text-xl font-semibold text-gray-800 mb-2">Unable to Load Questions</h2>
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">
+              Unable to Load Questions
+            </h2>
             <p className="text-gray-600 mb-4">{questionsError}</p>
-            <button onClick={() => window.location.reload()} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
               Try Again
             </button>
           </div>
@@ -517,9 +571,17 @@ export default function LiveInterview() {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center max-w-md mx-auto px-4">
             <div className="text-6xl mb-4">📚</div>
-            <h2 className="text-xl font-semibold text-gray-800 mb-2">No Questions Available</h2>
-            <p className="text-gray-600 mb-4">No interview questions found for {role}. Please add questions to the database.</p>
-            <button onClick={() => navigate("/interviewlibrary")} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">
+              No Questions Available
+            </h2>
+            <p className="text-gray-600 mb-4">
+              No interview questions found for {role}. Please add questions to
+              the database.
+            </p>
+            <button
+              onClick={() => navigate("/interviewlibrary")}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
               Return to Library
             </button>
           </div>
@@ -531,58 +593,85 @@ export default function LiveInterview() {
 
   // Review Mode - Show summary of all answers
   if (isReviewMode) {
-    const answeredCount = allAnswers.filter(a => a).length;
-    const totalScore = allAnswers.reduce((sum, ans) => sum + (ans?.score || 0), 0);
-    const avgScore = answeredCount > 0 ? Math.round(totalScore / answeredCount) : 0;
+    const answeredCount = allAnswers.filter((a) => a).length;
+    const totalScore = allAnswers.reduce(
+      (sum, ans) => sum + (ans?.score || 0),
+      0,
+    );
+    const avgScore =
+      answeredCount > 0 ? Math.round(totalScore / answeredCount) : 0;
     const passed = avgScore >= 60;
-    
+
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
         <Navbar />
         <div className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 py-8 mt-24">
           <div className="bg-white rounded-2xl shadow-lg border p-6 sm:p-8">
             <div className="text-center mb-6 sm:mb-8">
-              <h1 className="text-2xl font-bold text-gray-900">Interview Complete!</h1>
-              <p className="text-gray-500 mt-2">Review your answers before submitting</p>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Interview Complete!
+              </h1>
+              <p className="text-gray-500 mt-2">
+                Review your answers before submitting
+              </p>
             </div>
-            
+
             <div className="bg-gray-50 rounded-xl p-4 mb-6">
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <p className="text-2xl font-bold text-blue-600">{answeredCount}/{total}</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {answeredCount}/{total}
+                  </p>
                   <p className="text-xs text-gray-500">Questions</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-green-600">{avgScore}%</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {avgScore}%
+                  </p>
                   <p className="text-xs text-gray-500">Average Score</p>
                 </div>
                 <div>
-                  <p className={`text-2xl font-bold ${passed ? 'text-green-600' : 'text-red-600'}`}>
+                  <p
+                    className={`text-2xl font-bold ${passed ? "text-green-600" : "text-red-600"}`}
+                  >
                     {passed ? "Pass" : "Fail"}
                   </p>
                   <p className="text-xs text-gray-500">Status</p>
                 </div>
               </div>
             </div>
-            
+
             <div className="space-y-4 mb-8 max-h-96 overflow-y-auto">
               {allAnswers.map((answer, idx) => (
-                <div key={idx} className="border border-gray-200 rounded-xl p-4">
+                <div
+                  key={idx}
+                  className="border border-gray-200 rounded-xl p-4"
+                >
                   <div className="flex justify-between items-start mb-2 flex-wrap gap-2">
-                    <h3 className="font-semibold text-gray-800">Question {idx + 1}</h3>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${answer.score >= 70 ? 'bg-green-100 text-green-700' : answer.score >= 50 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
+                    <h3 className="font-semibold text-gray-800">
+                      Question {idx + 1}
+                    </h3>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${answer.score >= 70 ? "bg-green-100 text-green-700" : answer.score >= 50 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"}`}
+                    >
                       Score: {answer.score}/100
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600 mb-2">{answer.question}</p>
+                  <p className="text-sm text-gray-600 mb-2">
+                    {answer.question}
+                  </p>
                   <details className="text-sm">
-                    <summary className="cursor-pointer text-blue-600">View Your Answer</summary>
-                    <p className="mt-2 p-3 bg-gray-50 rounded-lg text-gray-700">{answer.userAnswer}</p>
+                    <summary className="cursor-pointer text-blue-600">
+                      View Your Answer
+                    </summary>
+                    <p className="mt-2 p-3 bg-gray-50 rounded-lg text-gray-700">
+                      {answer.userAnswer}
+                    </p>
                   </details>
                 </div>
               ))}
             </div>
-            
+
             <div className="flex flex-col sm:flex-row gap-4">
               <button
                 onClick={() => setIsReviewMode(false)}
@@ -621,7 +710,9 @@ export default function LiveInterview() {
             <div>
               <p className="text-xs text-slate-500">ACTIVE SESSION</p>
               <div className="flex items-center gap-2">
-                <h2 className="font-semibold text-slate-800 capitalize">{role?.replace(/%20/g, " ")} Interview</h2>
+                <h2 className="font-semibold text-slate-800 capitalize">
+                  {role?.replace(/%20/g, " ")} Interview
+                </h2>
                 <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs">
                   <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
                   Live
@@ -635,9 +726,15 @@ export default function LiveInterview() {
               Q{index + 1}/{total}
             </span>
             <div className="flex-1 sm:w-48 bg-slate-100 rounded-full h-2">
-              <div className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full" style={{ width: `${total ? ((index + 1) / total) * 100 : 0}%` }} />
+              <div
+                className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full"
+                style={{ width: `${total ? ((index + 1) / total) * 100 : 0}%` }}
+              />
             </div>
-            <button onClick={endSession} className="px-4 py-1.5 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600">
+            <button
+              onClick={endSession}
+              className="px-4 py-1.5 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600"
+            >
               End Session
             </button>
           </div>
@@ -650,14 +747,35 @@ export default function LiveInterview() {
           {/* Left Column - Camera */}
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-slate-900 rounded-2xl overflow-hidden relative group aspect-video">
-              <video ref={videoRef} autoPlay muted playsInline className="absolute inset-0 w-full h-full object-cover" />
-              <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" width={640} height={480} />
-              
+              <video
+                ref={videoRef}
+                autoPlay
+                muted
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              <canvas
+                ref={canvasRef}
+                className="absolute inset-0 w-full h-full"
+                width={640}
+                height={480}
+              />
+
               <div className="absolute top-4 right-4 z-10 flex gap-2">
                 {cameraEnabled ? (
-                  <button onClick={stopCamera} className="bg-red-500/80 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded-lg">Turn Off Camera</button>
+                  <button
+                    onClick={stopCamera}
+                    className="bg-red-500/80 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded-lg"
+                  >
+                    Turn Off Camera
+                  </button>
                 ) : (
-                  <button onClick={startCamera} className="bg-green-500/80 hover:bg-green-600 text-white text-xs px-3 py-1.5 rounded-lg">Enable Camera</button>
+                  <button
+                    onClick={startCamera}
+                    className="bg-green-500/80 hover:bg-green-600 text-white text-xs px-3 py-1.5 rounded-lg"
+                  >
+                    Enable Camera
+                  </button>
                 )}
               </div>
 
@@ -666,13 +784,20 @@ export default function LiveInterview() {
                   <div className="text-center">
                     <div className="text-4xl mb-2">📹</div>
                     <p className="text-white text-lg">Camera Disabled</p>
-                    <button onClick={startCamera} className="mt-3 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg">Enable Camera</button>
+                    <button
+                      onClick={startCamera}
+                      className="mt-3 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg"
+                    >
+                      Enable Camera
+                    </button>
                   </div>
                 </div>
               )}
 
               {cameraEnabled && !faceDetected && !cameraError && (
-                <div className="absolute top-4 left-4 bg-yellow-500 text-white px-4 py-2 rounded-lg animate-pulse">⚠️ No face detected</div>
+                <div className="absolute top-4 left-4 bg-yellow-500 text-white px-4 py-2 rounded-lg animate-pulse">
+                  ⚠️ No face detected
+                </div>
               )}
 
               {cameraEnabled && faceDetected && !cameraError && (
@@ -681,14 +806,20 @@ export default function LiveInterview() {
                     <div className="flex items-center gap-3">
                       <span className="text-xs">👀 Eye Contact</span>
                       <div className="w-20 bg-white/20 rounded-full h-1.5">
-                        <div className={`h-1.5 rounded-full ${eyeContact > 80 ? "bg-green-400" : eyeContact > 60 ? "bg-yellow-400" : "bg-red-400"}`} style={{ width: `${eyeContact}%` }} />
+                        <div
+                          className={`h-1.5 rounded-full ${eyeContact > 80 ? "bg-green-400" : eyeContact > 60 ? "bg-yellow-400" : "bg-red-400"}`}
+                          style={{ width: `${eyeContact}%` }}
+                        />
                       </div>
                       <span className="text-xs">{Math.round(eyeContact)}%</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-xs">🧍 Posture</span>
                       <div className="w-20 bg-white/20 rounded-full h-1.5">
-                        <div className={`h-1.5 rounded-full ${posture > 85 ? "bg-green-400" : posture > 70 ? "bg-yellow-400" : "bg-red-400"}`} style={{ width: `${posture}%` }} />
+                        <div
+                          className={`h-1.5 rounded-full ${posture > 85 ? "bg-green-400" : posture > 70 ? "bg-yellow-400" : "bg-red-400"}`}
+                          style={{ width: `${posture}%` }}
+                        />
                       </div>
                       <span className="text-xs">{Math.round(posture)}%</span>
                     </div>
@@ -701,16 +832,26 @@ export default function LiveInterview() {
             <div className="grid grid-cols-3 gap-3 sm:gap-4">
               <div className="bg-white rounded-xl p-4 shadow-sm border">
                 <p className="text-xs text-slate-500 mb-1">Duration</p>
-                <p className="text-xl font-bold text-slate-800">{formatTime(sessionStats.duration)}</p>
+                <p className="text-xl font-bold text-slate-800">
+                  {formatTime(sessionStats.duration)}
+                </p>
               </div>
               <div className="bg-white rounded-xl p-4 shadow-sm border">
                 <p className="text-xs text-slate-500 mb-1">Words</p>
-                <p className="text-xl font-bold text-slate-800">{sessionStats.wordsSpoken}</p>
+                <p className="text-xl font-bold text-slate-800">
+                  {sessionStats.wordsSpoken}
+                </p>
               </div>
               <div className="bg-white rounded-xl p-4 shadow-sm border">
                 <p className="text-xs text-slate-500 mb-1">Avg Eye Contact</p>
                 <p className="text-xl font-bold text-slate-800">
-                  {eyeContactHistory.length ? Math.round(eyeContactHistory.reduce((a, b) => a + b, 0) / eyeContactHistory.length) : 0}%
+                  {eyeContactHistory.length
+                    ? Math.round(
+                        eyeContactHistory.reduce((a, b) => a + b, 0) /
+                          eyeContactHistory.length,
+                      )
+                    : 0}
+                  %
                 </p>
               </div>
             </div>
@@ -723,17 +864,30 @@ export default function LiveInterview() {
               <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-lg border">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
-                  <span className="text-xs font-medium text-blue-600">CURRENT QUESTION</span>
+                  <span className="text-xs font-medium text-blue-600">
+                    CURRENT QUESTION
+                  </span>
                 </div>
-                <h2 className="text-lg sm:text-xl font-semibold text-slate-800 mb-3">{question.question}</h2>
+                <h2 className="text-lg sm:text-xl font-semibold text-slate-800 mb-3">
+                  {question.question}
+                </h2>
                 <div className="flex flex-wrap gap-2">
-                  {(Array.isArray(question.core_keywords) ? question.core_keywords : question.core_keywords?.split(";") || []).map((keyword, i) => (
-                    <span key={i} className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full">#{keyword.trim()}</span>
+                  {(Array.isArray(question.core_keywords)
+                    ? question.core_keywords
+                    : question.core_keywords?.split(";") || []
+                  ).map((keyword, i) => (
+                    <span
+                      key={i}
+                      className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full"
+                    >
+                      #{keyword.trim()}
+                    </span>
                   ))}
                 </div>
                 {allAnswers[index] && (
                   <div className="mt-3 p-2 bg-green-50 rounded-lg text-xs text-green-700">
-                    ✓ You've answered this question. You can review and change your answer.
+                    ✓ You've answered this question. You can review and change
+                    your answer.
                   </div>
                 )}
               </div>
@@ -744,7 +898,9 @@ export default function LiveInterview() {
               <div className="flex justify-between items-center mb-3">
                 <div className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
-                  <span className="text-xs font-medium text-emerald-600">YOUR ANSWER</span>
+                  <span className="text-xs font-medium text-emerald-600">
+                    YOUR ANSWER
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   {listening && (
@@ -768,7 +924,11 @@ export default function LiveInterview() {
               </div>
 
               <textarea
-                value={transcript + (interimTranscript || (pendingCorrection ? ` [${pendingCorrection}]` : ""))}
+                value={
+                  transcript +
+                  (interimTranscript ||
+                    (pendingCorrection ? ` [${pendingCorrection}]` : ""))
+                }
                 readOnly
                 rows={5}
                 className="w-full border border-slate-200 rounded-xl p-3 sm:p-4 font-mono text-sm text-slate-700 bg-slate-50"
@@ -780,7 +940,9 @@ export default function LiveInterview() {
                   onClick={listening ? stopListening : startListening}
                   disabled={!isSessionActive || loading}
                   className={`flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-white text-sm font-medium transition ${
-                    listening ? "bg-red-500 hover:bg-red-600" : "bg-gradient-to-r from-emerald-500 to-green-500 hover:from-green-500 hover:to-emerald-500"
+                    listening
+                      ? "bg-red-500 hover:bg-red-600"
+                      : "bg-gradient-to-r from-emerald-500 to-green-500 hover:from-green-500 hover:to-emerald-500"
                   } disabled:opacity-50`}
                 >
                   {listening ? "Stop Recording" : "Start Speaking"}
@@ -793,7 +955,8 @@ export default function LiveInterview() {
                     setInterimTranscript("");
                     if (recognitionRef.current) recognitionRef.current.stop();
                     setListening(false);
-                    if (correctionTimeoutRef.current) clearTimeout(correctionTimeoutRef.current);
+                    if (correctionTimeoutRef.current)
+                      clearTimeout(correctionTimeoutRef.current);
                   }}
                   disabled={loading}
                   className="px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-sm font-medium disabled:opacity-50"
@@ -803,7 +966,8 @@ export default function LiveInterview() {
               </div>
 
               <div className="mt-3 p-2 bg-blue-50 rounded-lg text-xs text-blue-600 text-center">
-                💡 Speak clearly. AI corrects technical terms like "froent" → "frontend"
+                💡 Speak clearly. AI corrects technical terms like "froent" →
+                "frontend"
               </div>
             </div>
 
@@ -811,16 +975,24 @@ export default function LiveInterview() {
             <div className="flex gap-3">
               <button
                 disabled={!isSessionActive || loading || !transcript.trim()}
-                onClick={() => { stopListening(); saveCurrentAnswer(); }}
+                onClick={() => {
+                  stopListening();
+                  saveCurrentAnswer();
+                }}
                 className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-cyan-500 hover:to-blue-500 text-white text-sm font-medium disabled:opacity-50"
               >
-                {loading ? "Evaluating..." : allAnswers[index] ? "Update Answer" : "Save & Next"}
+                {loading
+                  ? "Evaluating..."
+                  : allAnswers[index]
+                    ? "Update Answer"
+                    : "Save & Next"}
               </button>
             </div>
 
             {/* Progress indicator */}
             <div className="text-center text-sm text-slate-500">
-              Answered: {allAnswers.filter(a => a).length} of {total} questions
+              Answered: {allAnswers.filter((a) => a).length} of {total}{" "}
+              questions
             </div>
           </div>
         </div>

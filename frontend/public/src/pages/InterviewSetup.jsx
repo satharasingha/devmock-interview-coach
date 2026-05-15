@@ -38,8 +38,16 @@ export default function InterviewSetup() {
         <div className="bg-white rounded-xl shadow p-6 space-y-6">
           <h2 className="font-semibold text-lg">Interview Flow</h2>
 
-          <FlowStep step="1" title="Introduction" desc="Ice-breaker questions" />
-          <FlowStep step="2" title="Technical Questions" desc="Core challenges" />
+          <FlowStep
+            step="1"
+            title="Introduction"
+            desc="Ice-breaker questions"
+          />
+          <FlowStep
+            step="2"
+            title="Technical Questions"
+            desc="Core challenges"
+          />
           <FlowStep step="3" title="Feedback" desc="AI-based evaluation" />
 
           <button

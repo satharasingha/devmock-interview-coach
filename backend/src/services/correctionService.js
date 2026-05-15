@@ -1,5 +1,5 @@
-import Groq from 'groq-sdk';
-import dotenv from 'dotenv';
+import Groq from "groq-sdk";
+import dotenv from "dotenv";
 
 dotenv.config();
 
@@ -53,12 +53,13 @@ CORRECTED TRANSCRIPT:`;
       messages: [
         {
           role: "system",
-          content: "You are a technical speech-to-text correction expert. Return only the corrected text."
+          content:
+            "You are a technical speech-to-text correction expert. Return only the corrected text.",
         },
         {
           role: "user",
-          content: prompt
-        }
+          content: prompt,
+        },
       ],
       temperature: 0.1,
       max_tokens: 500,
@@ -67,7 +68,7 @@ CORRECTED TRANSCRIPT:`;
     const corrected = completion.choices[0]?.message?.content || rawTranscript;
     console.log(`Original: "${rawTranscript}"`);
     console.log(`Corrected: "${corrected}"`);
-    
+
     return corrected.trim();
   } catch (error) {
     console.error("Groq correction error:", error.message);
@@ -80,33 +81,33 @@ CORRECTED TRANSCRIPT:`;
  */
 export const quickCorrect = (text) => {
   const corrections = {
-    'froent': 'frontend',
-    'fro-end': 'frontend',
-    'frond': 'frontend',
-    'fontend': 'frontend',
-    'back': 'backend',
-    'back-end': 'backend',
-    'bacend': 'backend',
-    'reack': 'React',
-    'reacted': 'React',
-    'javashit': 'JavaScript',
-    'java script': 'JavaScript',
-    'type script': 'TypeScript',
-    'typescript': 'TypeScript',
-    'nodejs': 'Node.js',
-    'expressjs': 'Express.js',
-    'mongodb': 'MongoDB',
-    'postgresql': 'PostgreSQL',
-    'mysql': 'MySQL',
-    'api s': 'APIs',
+    froent: "frontend",
+    "fro-end": "frontend",
+    frond: "frontend",
+    fontend: "frontend",
+    back: "backend",
+    "back-end": "backend",
+    bacend: "backend",
+    reack: "React",
+    reacted: "React",
+    javashit: "JavaScript",
+    "java script": "JavaScript",
+    "type script": "TypeScript",
+    typescript: "TypeScript",
+    nodejs: "Node.js",
+    expressjs: "Express.js",
+    mongodb: "MongoDB",
+    postgresql: "PostgreSQL",
+    mysql: "MySQL",
+    "api s": "APIs",
   };
-  
+
   let corrected = text;
   for (const [wrong, correct] of Object.entries(corrections)) {
-    const regex = new RegExp(`\\b${wrong}\\b`, 'gi');
+    const regex = new RegExp(`\\b${wrong}\\b`, "gi");
     corrected = corrected.replace(regex, correct);
   }
-  
+
   return corrected;
 };
 
