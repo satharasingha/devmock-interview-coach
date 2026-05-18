@@ -184,7 +184,7 @@ export default function LiveInterview() {
       );
 
       if (response.ok) {
-        console.log("✅ All answers saved to history");
+        console.log("All answers saved to history");
         setAnswersSaved(true);
         return true;
       }
@@ -195,53 +195,77 @@ export default function LiveInterview() {
     }
   };
 
-  // Submit all answers and navigate to feedback
-  const submitAllAnswers = async () => {
-    if (allAnswers.length === 0 || allAnswers.length !== total) {
-      alert("Please answer all questions before submitting");
-      return;
-    }
 
-    setIsSubmitting(true);
 
-    const saved = await saveAllAnswersToHistory();
+ // Submit all answers and navigate to feedback
+const submitAllAnswers = async () => {
+  if (allAnswers.length === 0 || allAnswers.length !== total) {
+    alert(`Please answer all questions before submitting (${allAnswers.length}/${total} completed)`);
+    return;
+  }
 
-    if (saved) {
-      const totalScore = allAnswers.reduce((sum, ans) => sum + ans.score, 0);
-      const avgScore = Math.round(totalScore / allAnswers.length);
-      const passed = avgScore >= 60;
-      const allStrengths = allAnswers.flatMap((a) => a.strengths || []);
-      const allImprovements = allAnswers.flatMap((a) => a.improvements || []);
+  setIsSubmitting(true);
 
-      navigate("/feedback", {
-        state: {
-          date: new Date().toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          }),
-          duration: formatTime(sessionStats.duration),
-          topic: role,
-          score: avgScore,
-          relevance: 85,
-          fluency: Math.max(
-            0,
-            Math.min(100, 100 - sessionStats.fillerWords * 2),
-          ),
-          structure: 75,
-          fillerWords: sessionStats.fillerWords,
-          strengths: [...new Set(allStrengths)].slice(0, 5),
-          improvements: [...new Set(allImprovements)].slice(0, 5),
-          allAnswers: allAnswers,
-          passed: passed,
-        },
-      });
-    } else {
-      alert("Error saving interview results. Please try again.");
-    }
+  // Show saving message
+  const savingToast = setTimeout(() => {
+    console.log("Saving interview results...");
+  }, 500);
 
-    setIsSubmitting(false);
-  };
+  const saved = await saveAllAnswersToHistory();
+  clearTimeout(savingToast);
+
+  if (saved) {
+    const totalScore = allAnswers.reduce((sum, ans) => sum + (ans?.score || 0), 0);
+    const avgScore = allAnswers.length > 0 ? Math.round(totalScore / allAnswers.length) : 0;
+    const passed = avgScore >= 60;
+    const allStrengths = allAnswers.flatMap((a) => a.strengths || []);
+    const allImprovements = allAnswers.flatMap((a) => a.improvements || []);
+
+    // Format answers correctly for FeedbackPage
+    const formattedAnswers = allAnswers.map((answer, idx) => ({
+      id: idx,
+      question: answer.question,
+      answer: answer.userAnswer,        // FeedbackPage expects 'answer'
+      score: answer.score,
+      matchedKeywords: answer.matchedKeywords || [],
+      missingKeywords: answer.missingKeywords || [],
+      strengths: answer.strengths || [],
+      improvements: answer.improvements || [],
+      perfectAnswer: answer.corrected_answer || answer.perfectAnswer || null,
+    }));
+
+    console.log("Navigating to feedback page...");
+    console.log("Answers:", formattedAnswers.length);
+    console.log("Average Score:", avgScore);
+
+    // Navigate to feedback page
+    navigate("/feedback", {
+      state: {
+        date: new Date().toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        }),
+        duration: formatTime(sessionStats.duration),
+        topic: role?.replace(/%20/g, " ") || "Unknown",
+        score: avgScore,
+        relevance: Math.min(100, Math.max(0, avgScore + 5)),
+        fluency: Math.max(0, Math.min(100, 100 - sessionStats.fillerWords * 2)),
+        structure: Math.min(100, Math.max(0, avgScore - 5)),
+        fillerWords: sessionStats.fillerWords,
+        strengths: [...new Set(allStrengths)].slice(0, 5),
+        improvements: [...new Set(allImprovements)].slice(0, 5),
+        allAnswers: formattedAnswers,
+        passed: passed,
+      },
+    });
+  } else {
+    alert("Error saving interview results. Please check your connection and try again.");
+  }
+
+  setIsSubmitting(false);
+};
+
 
   // Start Camera
   const startCamera = async () => {
@@ -836,12 +860,7 @@ export default function LiveInterview() {
                   {formatTime(sessionStats.duration)}
                 </p>
               </div>
-              <div className="bg-white rounded-xl p-4 shadow-sm border">
-                <p className="text-xs text-slate-500 mb-1">Words</p>
-                <p className="text-xl font-bold text-slate-800">
-                  {sessionStats.wordsSpoken}
-                </p>
-              </div>
+             
               <div className="bg-white rounded-xl p-4 shadow-sm border">
                 <p className="text-xs text-slate-500 mb-1">Avg Eye Contact</p>
                 <p className="text-xl font-bold text-slate-800">

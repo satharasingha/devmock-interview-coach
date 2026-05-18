@@ -1,189 +1,191 @@
-import Groq from 'groq-sdk';
-import dotenv from 'dotenv';
+import Groq from "groq-sdk";
+import dotenv from "dotenv";
 
-// Load environment variables
 dotenv.config();
 
-// Debug: Check if API key is loaded
-console.log('GROQ_API_KEY loaded:', process.env.GROQ_API_KEY ? 'Yes' : 'No');
-console.log('API Key length:', process.env.GROQ_API_KEY?.length || 0);
-
-// Initialize Groq client with explicit API key
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
-// Cache for Groq responses to avoid duplicate API calls
+// Cache for Groq responses
 const responseCache = new Map();
 const CACHE_TTL = 3600000; // 1 hour
 
-/**
- * Check if the answer is invalid (I don't know, pass, skip, etc.)
- */
 const isInvalidAnswer = (userAnswer) => {
   const invalidPhrases = [
-    "i don't know", "i dont know", "i don\'t know", "i do not know",
-    "not sure", "no idea", "i have no idea", "i don't understand",
-    "i cant answer", "i cannot answer", "pass", "skip", "next question",
-    "i'm not sure", "i am not sure", "dont know", "dk"
+    "i don't know",
+    "i dont know",
+    "i don\'t know",
+    "i do not know",
+    "not sure",
+    "no idea",
+    "i have no idea",
+    "i don't understand",
+    "i cant answer",
+    "i cannot answer",
+    "pass",
+    "skip",
+    "next question",
+    "i'm not sure",
+    "i am not sure",
+    "dont know",
+    "dk",
+    "i'm not familiar",
+    "i am not familiar",
+    "not familiar",
+    "i haven't learned",
+    "i haven't studied",
+    "i'm not confident",
+    "i am not confident",
+    "i don't recall",
+    "i don't remember",
+    "i'm not comfortable",
+    "i am not comfortable",
   ];
   const lowerAnswer = userAnswer.toLowerCase();
-  return invalidPhrases.some(phrase => lowerAnswer.includes(phrase));
+  return invalidPhrases.some((phrase) => lowerAnswer.includes(phrase));
 };
 
-/**
- * Check if answer is too short (less than 5 words)
- */
 const isAnswerTooShort = (userAnswer) => {
   const wordCount = userAnswer.trim().split(/\s+/).length;
   return wordCount < 5;
 };
 
-/**
- * Evaluate answer using Groq API
- */
-export const evaluateWithGroq = async (userAnswer, referenceAnswer, coreKeywords) => {
-  // Check if API key is available
+export const evaluateWithGroq = async (
+  userAnswer,
+  referenceAnswer,
+  coreKeywords,
+) => {
   if (!process.env.GROQ_API_KEY) {
-    console.warn("GROQ_API_KEY not found in environment variables");
+    console.warn("GROQ_API_KEY not found");
     return null;
   }
 
-  // PRE-CHECK: Invalid answer detection (I don't know)
   if (isInvalidAnswer(userAnswer)) {
-    console.log("nvalid answer detected (I don't know / not sure), returning low score");
     return {
       final_score: 1,
       semantic_similarity: 10,
       matched_keywords: [],
       missing_keywords: coreKeywords || [],
       strengths: ["You acknowledged you don't know the answer"],
-      improvements: ["Review the reference answer to learn this concept", "Study the key technical terms"],
+      improvements: ["Review the reference answer to learn this concept"],
+      corrected_answer: referenceAnswer,
       evaluation_method: "precheck_invalid",
     };
   }
 
-  // PRE-CHECK: Answer too short
   if (isAnswerTooShort(userAnswer)) {
-    console.log("⚠️ Answer too short, returning low score");
     return {
       final_score: 2,
       semantic_similarity: 20,
       matched_keywords: [],
       missing_keywords: coreKeywords || [],
       strengths: ["You provided an answer"],
-      improvements: ["Provide more detailed answers with specific technical concepts", `Include keywords like: ${coreKeywords.slice(0, 3).join(', ')}`],
+      improvements: [
+        "Provide more detailed answers",
+        `Include keywords like: ${coreKeywords?.slice(0, 3).join(", ")}`,
+      ],
+      corrected_answer: referenceAnswer,
       evaluation_method: "precheck_too_short",
     };
   }
 
   try {
-    // Check cache first
     const cacheKey = `${userAnswer.substring(0, 200)}_${referenceAnswer.substring(0, 200)}`;
     if (responseCache.has(cacheKey)) {
       const cached = responseCache.get(cacheKey);
       if (Date.now() - cached.timestamp < CACHE_TTL) {
-        console.log("Using cached Groq response");
         return cached.data;
       }
       responseCache.delete(cacheKey);
     }
 
-    const prompt = `You are an expert technical interviewer. Evaluate the candidate's answer.
+    // FIXED PROMPT - Only fix grammar, no long explanations
+    const prompt = `You are a technical interview assistant. Fix grammar and spelling errors in the candidate's answer.
 
-QUESTION KEYWORDS: ${coreKeywords.join(', ')}
-REFERENCE ANSWER: ${referenceAnswer}
-CANDIDATE'S ANSWER: ${userAnswer}
+TASK:
+1. Fix grammar and spelling errors in the candidate's answer
+2. Keep the answer SHORT and SIMPLE (same length as original)
+3. DO NOT add new information or long explanations
+4. DO NOT write a perfect answer - just correct the grammar
 
-SCORING RULES (VERY IMPORTANT):
-- Score 0-2: Answer shows NO understanding, says "I don't know", or is completely wrong
-- Score 3-4: Answer has major gaps, missing most key concepts, or partially incorrect
-- Score 5-6: Basic understanding present but missing several key concepts
-- Score 7-8: Good understanding, most key concepts covered, minor gaps
-- Score 9-10: Excellent, comprehensive, all key concepts covered, well-structured
+QUESTION: ${referenceAnswer}
+CANDIDATE'S RAW ANSWER: "${userAnswer}"
+KEY CONCEPTS: ${coreKeywords?.join(", ") || "None"}
 
-BE STRICT AND HONEST. If the answer is vague or missing key technical terms, give a LOW score.
+EXAMPLE:
+Raw: "react js is fron and library"
+Corrected: "React js is a frontend library"
 
-
-
+Return ONLY valid JSON:
 {
   "score": <integer 0-10>,
-  "strengths": ["<specific strength 1>", "<specific strength 2>"],
-  "improvements": ["<specific area to improve 1>", "<specific area to improve 2>"],
-  "matched_keywords": ["<keyword found>"],
-  "missing_keywords": ["<keyword missing>"]
+  "corrected_answer": "<grammar-fixed version only, no extra text>",
+  "matched_keywords": ["keyword1"],
+  "missing_keywords": ["keyword2"],
+  "strengths": ["strength1"],
+  "improvements": ["improvement1"]
 }
 
+SCORING RULES (based on CORRECTED answer):
+- Score 7-8: Good understanding, mentioned key concepts
+- Score 5-6: Basic understanding, missing some key concepts  
+- Score 3-4: Poor understanding, missing most key concepts
+- Score 0-2: Wrong answer or no understanding
 
-- If the candidate didn't mention key technical terms, they should be in missing_keywords
-- Score must reflect the quality of the answer accurately
-- Be strict - a vague answer should get a low score (3-4)`;
-
-    console.log("Calling Groq API for evaluation...");
+Be FAIR - if the corrected answer is correct, give 7-8/10.`;
 
     const completion = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       messages: [
         {
           role: "system",
-          content: "You are an expert technical interviewer. Be strict and honest in your evaluation. Return only valid JSON. Score 0-2 for answers that show no understanding or say 'I don't know'. Score 3-4 for vague or incomplete answers."
+          content: "You fix grammar in technical answers. Keep answers short. Return only valid JSON. Do not add explanations.",
         },
         {
           role: "user",
-          content: prompt
-        }
+          content: prompt,
+        },
       ],
-      temperature: 0.2,
+      temperature: 0.1,
       max_tokens: 500,
     });
 
     const resultText = completion.choices[0]?.message?.content;
-    console.log("Groq response received:", resultText?.substring(0, 100) + "...");
-    
-    // Parse the JSON response
+    console.log("Groq response:", resultText?.substring(0, 200));
+
     let result;
-    try {
-      // Try to extract JSON if there's extra text
-      const jsonMatch = resultText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        result = JSON.parse(jsonMatch[0]);
-      } else {
-        result = JSON.parse(resultText);
-      }
-    } catch (parseError) {
-      console.error("Failed to parse Groq response:", resultText);
-      throw new Error("Invalid JSON response from Groq");
+    const jsonMatch = resultText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      result = JSON.parse(jsonMatch[0]);
+    } else {
+      result = JSON.parse(resultText);
     }
 
-    // Ensure score is within 0-10 range
     let score = result.score || 5;
     score = Math.min(10, Math.max(0, score));
-    
-    // If score is too high for a poor answer, adjust
-    if (score >= 5 && isAnswerTooShort(userAnswer)) {
-      score = Math.min(score, 4);
-      console.log("Adjusted score down due to short answer");
-    }
+
+    const correctedAnswer = result.corrected_answer || userAnswer;
 
     const evaluatedResult = {
       final_score: score,
       semantic_similarity: score * 10,
       matched_keywords: result.matched_keywords || [],
       missing_keywords: result.missing_keywords || coreKeywords || [],
-      strengths: result.strengths || ["Answer provided"],
-      improvements: result.improvements || ["Review the reference answer for better structure", "Include key technical terms"],
+      strengths: result.strengths || ["You provided an answer"],
+      improvements: result.improvements || ["Review the corrected answer above"],
+      corrected_answer: correctedAnswer,
+      original_answer: userAnswer,
       evaluation_method: "groq",
     };
 
-    // Cache the result
     responseCache.set(cacheKey, {
       data: evaluatedResult,
       timestamp: Date.now(),
     });
 
-    console.log(`✅ Groq evaluation complete - Score: ${evaluatedResult.final_score}/10`);
+    console.log(`Groq evaluation - Score: ${evaluatedResult.final_score}/10`);
     return evaluatedResult;
-
   } catch (error) {
     console.error("Groq API error:", error.message);
     return null;

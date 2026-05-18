@@ -52,7 +52,7 @@ export default function useInterviewQuestions(role) {
             job_role: q.job_role
           }));
           
-          console.log(`✅ Loaded ${formattedQuestions.length} questions for ${formattedRole}`);
+          console.log(`Loaded ${formattedQuestions.length} questions for ${formattedRole}`);
           setQuestions(formattedQuestions);
           setIndex(0);
           setError(null);
